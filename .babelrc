@@ -1,0 +1,35 @@
+{
+    "presets": [
+        [
+            "env",
+            {
+                "targets": {
+                    "browsers": [
+                        "last 1 Chrome version"
+                    ]
+                }
+            }
+        ],
+        "stage-2",
+        "react"
+    ],
+    "env": {
+        "legacy": {
+            "presets": [
+                [
+                    "env",
+                    {
+                        "targets": {
+                            "browsers": [
+                                ">1%",
+                                "last 2 versions"
+                            ]
+                        }
+                    }
+                ],
+                "stage-2",
+                "react"
+            ]
+        }
+    }
+}

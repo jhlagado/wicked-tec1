@@ -1,0 +1,29 @@
+language: node_js
+node_js:
+  - 'stable'
+script:
+  - yarn test-travis
+before_script:
+  - npm prune
+install:
+  - yarn install
+after_success:
+  - yarn build
+  - yarn lh -- --score=96 https://jhlagado.github.io/basic-hyper/index.html
+cache:
+  directories:
+    - node_modules
+notifications:
+  email: false
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github_token: $GITHUB_API_KEY
+  keep-history: true
+  local_dir: dist
+  on:
+    branch: develop
