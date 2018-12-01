@@ -37,11 +37,11 @@ function observeProperties(object, element) {
   }
 }
 
-function debounceRender(element) {
+function debounceRender(object) {
   let requested = false;
   const renderFunc = () => {
     requested = false;
-    element.render()
+    object.render()
   };
   return () => {
     if (requested) return;
