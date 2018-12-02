@@ -35,7 +35,7 @@ export function initApp() {
             console.log('on connected');
             this.worker = new Worker('./worker/worker.js');
             this.worker.onmessage = event => {
-                let view = new Int8Array(event.data.buffer);
+                let view = new Uint8Array(event.data.buffer);
                 this._digits = view[1];
                 this._segments = view[2];
                 this._rando = view[3];
@@ -89,59 +89,23 @@ export function initApp() {
         },
 
         render() {
-            this.html`!
-<slot></slot>!
+            this.html`
 <p>digits ${this._digits}</p>
 <p>segments ${this._segments}</p>
 <p>I am rando ${this._rando}</p>
-<div id="seven" is="seven-seg-display" data=${{ digits: this._digits, segments: this._segments }} digits=${{ digits: this._digits }}
-    segments=${this._segments}>7 Segment display</div>
+<div id="seven" is="seven-seg-display" data=${{ digits: this._digits, segments: this._segments }} >7 Segment display</div>
             `;
-            // const el = document.getElementById('seven');
-            // el.digits = 1;
         },
 
     });
 
-
     ////////////////////////////////////////////////////////////////
 
+    wickedElements.define('[is="seven-seg-display"]', withProps({
 
-
-
-    wickedElements.define('[is="seven-seg-display"]', {
-
-        init: function (event) {
+        init (event) {
             this.el = event.currentTarget;
-            this._data = {};
-            const context = this;
-
-            Object.defineProperty(this, 'data', {
-
-                get() {
-                    return context._data
-                },
-            });
-
-            Object.defineProperty(this.el, 'data', {
-
-                get() {
-                    return context._data
-                },
-
-                set(value) {
-                    const oldValue = context._data;
-                    context._data = value;
-                    const props = context.observedProperties || Object.keys(value);
-                    props.forEach((prop) => {
-                        const oldProp = oldValue[prop];
-                        const newProp = value[prop];
-                        if (oldProp !== newProp) {
-                            context.propertyChanged(prop, newProp, oldProp)
-                        }
-                    });
-                }
-            });
+            this.display = Array(6).fill(0);
 
             this.requestRender = debounceRender(this);
             this.requestRender();
@@ -164,60 +128,66 @@ export function initApp() {
         },
 
         propertyChanged(prop, newValue, oldValue) {
-            console.log(`property changed ${prop} ${newValue} ${oldValue} `);
-            this.requestRender();
-        },
+            // console.log(`property changed ${prop} ${newValue} ${oldValue} `);
 
-        // onattributechanged({attributeName, newValue, oldValue}) {
-        //     console.log(`attribute changed`, {attributeName, newValue, oldValue});
-        //     this.requestRender();
-        // },
+            let mask = 0x01;
+            for (let i = 0; i < 6; i++) {
+              if (this.data.digits & mask)
+                this.display[i] = this.data.segments;
+              mask = mask << 1;
+            }
+
+            this.requestRender();
+
+
+        },
 
         render() {
             this.html`
 <p>digits ${this.data.digits}</p>
 <p>segments ${this.data.segments}</p>
+<p>display ${this.display}</p>
             `;
         },
 
-    });
+    }));
 }
 
-function withProps(definition) {
+function withProps(def) {
 
-    return {
-        init(event) {
+    const def2 =  Object.create(def);
+    const oldInit = def2.init;
+    def2.init = function(event){
 
-            Object.assign(this, definition);
-            this.init(event);
+        this._data = {};
+        Object.defineProperty(this, 'data', {
+            get() {
+                return this._data
+            }
+        });
 
-            const context = this;
-            Object.defineProperty(this, 'data', {
+        oldInit.call(this, event);
+        const context = this;
+        Object.defineProperty(this.el, 'data', {
 
-                get() {
-                    return context._data
-                }
-            });
+            get() {
+                return context._data
+            },
 
-            Object.defineProperty(this.el, 'data', {
+            set(value) {
+                const oldValue = context._data;
+                context._data = value;
+                const props = context.observedProperties || Object.keys(value);
+                props.forEach((prop) => {
+                    const oldProp = oldValue[prop];
+                    const newProp = value[prop];
+                    if (oldProp !== newProp) {
+                        context.propertyChanged(prop, newProp, oldProp)
+                    }
+                });
+            }
+        });
+    }
 
-                get() {
-                    return context._data
-                },
-
-                set(value) {
-                    const oldValue = context._data;
-                    context._data = value;
-                    const props = context.observedProperties || Object.keys(value);
-                    props.forEach((prop) => {
-                        const oldProp = oldValue[prop];
-                        const newProp = value[prop];
-                        if (oldProp !== newProp) {
-                            context.propertyChanged(prop, newProp, oldProp)
-                        }
-                    });
-                }
-            });
-        }
-    };
-}
+    return def2;
+};

@@ -54,7 +54,7 @@ function run() {
         const state = cpu.getState();
         const random = Math.random() * 1000;
         var buffer = new ArrayBuffer(4);
-        var view = new Int8Array(buffer);
+        var view = new Uint8Array(buffer);
         view[0] = outPorts[0];
         view[1] = outPorts[1];
         view[2] = outPorts[2];
