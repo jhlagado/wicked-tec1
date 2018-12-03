@@ -19,7 +19,7 @@ const keyMap = {
 
 export function initApp() {
 
-    wickedElements.define('[is="wicked-element"]', withProps({
+    wickedElements.define('[is="wicked-tec1"]', withProps({
 
         init: function (event) {
             this.digits = 0;
