@@ -214,6 +214,12 @@ export function Z80(coreParameter) {
         cycle_counter = 0;
     };
 
+    let reset1 = function () {
+        sp = 0xdff0;
+        pc = 0x0000;
+        halted = false;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////
     /// @public run_instruction
     ///
@@ -251,7 +257,7 @@ export function Z80(coreParameter) {
             }
             catch (e) {
                 console.log(`Illegal opcode ${opcode} at ${pc}`);
-                halted = true; 
+                halted = true;
             }
             pc = (pc + 1) & 0xffff;
 
@@ -2981,6 +2987,7 @@ export function Z80(coreParameter) {
         getState,
         setState,
         reset,
+        reset1,
         run_instruction,
         interrupt,
     };

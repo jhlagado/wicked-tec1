@@ -32,6 +32,7 @@ self.onmessage = event => {
     }
     if (event.data.type === 'EXIT') {
         active = false;
+        cpu.reset();
     }
     else if (event.data.type === 'RESET') {
         cpu.reset();
@@ -49,20 +50,21 @@ self.onmessage = event => {
 
 function run() {
     for (let i = 0; i < 500 ; i++) {
+        if (!active) return;
     // while (!yieldFlag) {
         cpu.run_instruction();
-        const state = cpu.getState();
-        const random = Math.random() * 1000;
+        // const state = cpu.getState();
         var buffer = new ArrayBuffer(4);
         var view = new Uint8Array(buffer);
         view[0] = outPorts[0];
         view[1] = outPorts[1];
         view[2] = outPorts[2];
-        view[3] = random;
         self.postMessage({ buffer: buffer }, [buffer]);
     }
     yieldFlag = false;
     if (active) requestAnimationFrame(run);
+    // if (active) setTimeout(run, 300);
+    console.log('yield');
 }
 
 function loadROM() {

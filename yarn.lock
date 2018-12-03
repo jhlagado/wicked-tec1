@@ -4021,6 +4021,10 @@ lightercollective@^0.1.0:
     minimist "^1.2.0"
     node-fetch "^2.2.0"
 
+lit-html@0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/lit-html/-/lit-html-0.14.0.tgz#d6830e8f55fb923b0f5824decf7da082a1d22997"
+
 load-json-file@^1.0.0:
   version "1.1.0"
   resolved "http://registry.npmjs.org/load-json-file/-/load-json-file-1.1.0.tgz#956905708d58b4bab4c2261b04f59f31c99374c0"
