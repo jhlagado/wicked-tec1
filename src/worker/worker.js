@@ -35,6 +35,7 @@ self.onmessage = event => {
     }
     else if (event.data.type === 'RESET') {
         cpu.reset();
+        if (!active) run();
     }
     else if (event.data.type === 'SET_INPUT_VALUE') {
         const { port, value } = event.data;
