@@ -24,7 +24,6 @@ const cpu = Z80({
 
 self.onmessage = event => {
     if (event.data.type === 'INIT') {
-        console.log('init');
         loadROM();
         cpu.reset();
         active = true;
@@ -38,18 +37,16 @@ self.onmessage = event => {
         cpu.reset();
     }
     else if (event.data.type === 'SET_INPUT_VALUE') {
-        console.log('set input value', event.data);
         const { port, value } = event.data;
         inPorts[port] = value;
     }
     else if (event.data.type === 'NMI') {
-        console.log('NMI');
         cpu.interrupt(true);
     }
 };
 
 function run() {
-    for (let i = 0; i < 500 ; i++) {
+    for (let i = 0; i < 600 ; i++) {
         if (!active) return;
     // while (!yieldFlag) {
         cpu.run_instruction();
@@ -62,9 +59,7 @@ function run() {
         self.postMessage({ buffer: buffer }, [buffer]);
     }
     yieldFlag = false;
-    if (active) requestAnimationFrame(run);
-    // if (active) setTimeout(run, 300);
-    console.log('yield');
+    if (active) setTimeout(run, 16);
 }
 
 function loadROM() {

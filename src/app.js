@@ -189,9 +189,7 @@ export function initApp() {
                     this.display0[i] = this.segments;
                 mask = mask << 1;
             }
-            if (this.display0.some(segs => segs != 0) || true) {
-                this.display = [...this.display0];
-            }
+            this.display = [...this.display0];
         },
 
         render({ digits, segments, display }) {
