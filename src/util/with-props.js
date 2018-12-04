@@ -9,7 +9,12 @@ export function withProps(def) {
     this.element = event.currentTarget;
     this.requestRender = debounceRender(this);
 
-    if (oldInit) oldInit.call(this, event);
+    if (oldInit) {
+      oldInit.call(this, event);
+    }
+    else {
+      this.requestRender();
+    }
     observeProperties(this, event);
   }
   return def2;
@@ -18,7 +23,10 @@ export function withProps(def) {
 function observeProperties(object) {
 
   const props = object.observedProperties;
-  if (!props || !props.length) return;
+  if (!props || !props.length) {
+    object.requestRender();
+    return;
+  };
 
   const element = object.element;
   for (let prop of props) {
@@ -46,8 +54,8 @@ function observeProperties(object) {
           object.propertyChanged(
             prop, value, oldValue
           );
-          object.requestRender();
         }
+        object.requestRender();
       }
     });
 
