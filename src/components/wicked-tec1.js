@@ -42,27 +42,30 @@ export const wickedTec1 = withProps({
 
     handleKeyDown(event) {
 
-        if (event.code === 'Escape') {
-            this.worker.postMessage({ type: 'RESET' });
-            event.preventDefault();
-        }
-        if (event.code === 'KeyQ') {
-            if (event.ctrlKey) {
-                this.worker.postMessage({ type: 'EXIT' });
-            }
-            event.preventDefault();
-        }
-        else if (event.code in keyMap) {
-            let keyCode = keyMap[event.code];
-            if (event.shiftKey) {
-                keyCode = keyCode | 0x80;
-            }
-            this.worker.postMessage({ type: 'SET_INPUT_VALUE', port: 0, value: keyCode });
-            this.worker.postMessage({ type: 'NMI' });
+        if (this.handleButton(event.code, event.shiftKey, event.ctrlKey)) {
             event.preventDefault();
         }
         else {
             console.log(event, event.code, event.key);
+        }
+    },
+
+    handleButton(code, shiftKey, ctrlKey) {
+        if (code === 'Escape') {
+            this.worker.postMessage({ type: 'RESET' });
+        }
+        if (code === 'KeyQ') {
+            if (ctrlKey) {
+                this.worker.postMessage({ type: 'EXIT' });
+            }
+        }
+        else if (code in keyMap) {
+            let keyCode = keyMap[code];
+            if (shiftKey) {
+                keyCode = keyCode | 0x80;
+            }
+            this.worker.postMessage({ type: 'SET_INPUT_VALUE', port: 0, value: keyCode });
+            this.worker.postMessage({ type: 'NMI' });
         }
     },
 
@@ -75,6 +78,7 @@ export const wickedTec1 = withProps({
         height: 375px;
         background-image: url(${tec1Image});
         background-size: 100% 100%;
+        position: relative;
     }
 
     #digitPane {
@@ -92,8 +96,56 @@ export const wickedTec1 = withProps({
     .on {
         fill: red;
     }
+
+    [is=key-button] {
+        height: 0px;
+    }
+
+    [is=key-button]>div {
+        position: absolute;
+        background-color: #cd3d45;
+        color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
+        font-size: 13px;
+        font-weight: bold;
+        width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        left: 438px;
+        top: 301px;
+    }
 </style>
 <div id="tec1">
+
+    <div is="key-button" .text=${ 'AD'} .color=${ '#cd3d45'} .left=${438} .top=${239} @click=${() => this.handleButton('Tab')}></div>
+    <div is="key-button" .text=${ '3'} .color=${ '#efedeb'} .left=${468} .top=${239} @click=${() => this.handleButton('Digit3')}></div>
+    <div is="key-button" .text=${ '7'}  .color=${ '#efedeb'} .left=${500} .top=${239} @click=${() => this.handleButton('Digit7')}></div>
+    <div is="key-button" .text=${ 'B'} .color=${ '#efedeb'} .left=${531} .top=${239} @click=${() => this.handleButton('KeyB')}></div>
+    <div is="key-button" .text=${ 'F'} .color=${ '#efedeb'} .left=${562} .top=${239} @click=${() => this.handleButton('KeyF')}></div>
+
+    <div is="key-button" .text=${ 'GO'} .color=${ '#cd3d45'} .left=${438} .top=${270} @click=${() => this.handleButton('Enter')}></div>
+    <div is="key-button" .text=${ '2'} .color=${ '#efedeb'} .left=${468} .top=${270} @click=${() => this.handleButton('Digit2')}></div>
+    <div is="key-button" .text=${ '6'} .color=${ '#efedeb'} .left=${500} .top=${270} @click=${() => this.handleButton('Digit6')}></div>
+    <div is="key-button" .text=${ 'A'} .color=${ '#efedeb'} .left=${531} .top=${270} @click=${() => this.handleButton('KeyA')}></div>
+    <div is="key-button" .text=${ 'E'} .color=${ '#efedeb'} .left=${562} .top=${270} @click=${() => this.handleButton('KeyE')}></div>
+
+    <div is="key-button" .text=${ '-'}  .color=${ '#cd3d45'} .left=${438} .top=${301} @click=${() => this.handleButton('ArrowDown')}></div>
+    <div is="key-button" .text=${ '1'} .color=${ '#efedeb'} .left=${468} .top=${301} @click=${() => this.handleButton('Digit1')}></div>
+    <div is="key-button" .text=${ '5'} .color=${ '#efedeb'} .left=${500} .top=${301} @click=${() => this.handleButton('Digit5')}></div>
+    <div is="key-button" .text=${ '9'} .color=${ '#efedeb'} .left=${531} .top=${301} @click=${() => this.handleButton('Digit9')}></div>
+    <div is="key-button" .text=${ 'D'} .color=${ '#efedeb'} .left=${562} .top=${301} @click=${() => this.handleButton('KeyD')}></div>
+
+    <div is="key-button" .text=${ '+'}  .color=${ '#cd3d45'} .left=${438} .top=${332} @click=${() => this.handleButton('ArrowUp')}></div>
+    <div is="key-button" .text=${ '0'} .color=${ '#efedeb'} .left=${468} .top=${332} @click=${() => this.handleButton('Digit0')}></div>
+    <div is="key-button" .text=${ '4'} .color=${ '#efedeb'} .left=${500} .top=${332} @click=${() => this.handleButton('Digit4')}></div>
+    <div is="key-button" .text=${ '8'} .color=${ '#efedeb'} .left=${531} .top=${332} @click=${() => this.handleButton('Digit8')}></div>
+    <div is="key-button" .text=${ 'C'} .color=${ '#efedeb'} .left=${562} .top=${332} @click=${() => this.handleButton('KeyC')}></div>
+
+    <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
+
     <div id="digitPane">
         <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
     </div>
@@ -101,6 +153,4 @@ export const wickedTec1 = withProps({
 <div is="instructions" style="margin-left: 35px"></div>
 `;
     },
-
-
 });
