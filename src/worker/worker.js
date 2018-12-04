@@ -19,8 +19,12 @@ const cpu = Z80({
     io_write: (port, value) => {
         yieldFlag = true;
         outPorts[port & 0xFF] = value;
+        updateDisplay();
+        postOutPorts();
     },
 });
+
+const display = Array(6).fill(0);
 
 self.onmessage = event => {
     if (event.data.type === 'INIT') {
@@ -34,8 +38,12 @@ self.onmessage = event => {
         cpu.reset();
     }
     else if (event.data.type === 'RESET') {
+        console.log('resetting');
         cpu.reset();
-        if (!active) run();
+        if (!active) {
+            active = true;
+            run();
+        }
     }
     else if (event.data.type === 'SET_INPUT_VALUE') {
         const { port, value } = event.data;
@@ -51,16 +59,47 @@ function run() {
         if (!active) return;
     // while (!yieldFlag) {
         cpu.run_instruction();
-        // const state = cpu.getState();
-        var buffer = new ArrayBuffer(4);
-        var view = new Uint8Array(buffer);
-        view[0] = outPorts[0];
-        view[1] = outPorts[1];
-        view[2] = outPorts[2];
-        self.postMessage({ buffer: buffer }, [buffer]);
     }
     yieldFlag = false;
     if (active) setTimeout(run, 16);
+}
+
+function updateDisplay() {
+    const digits = outPorts[1];
+    const segments = outPorts[2];
+    let mask = 0x01;
+    for (let i = 0; i < 6; i++) {
+        if (digits & mask){
+            display[i] = segments;
+        }
+        mask = mask << 1;
+    }
+}
+
+function getPortsBuffer(){
+    var buffer = new ArrayBuffer(4);
+    var view = new Uint8Array(buffer);
+    view[0] = outPorts[0];
+    view[1] = outPorts[1];
+    view[2] = outPorts[2];
+    return buffer;
+}
+
+function getDisplayBuffer(){
+    var buffer = new ArrayBuffer(6);
+    var view = new Uint8Array(buffer);
+    for (let i = 0; i < 6; i++) {
+        view[i] = display[i];
+    }
+    return buffer;
+}
+
+function postOutPorts() {
+    const buffer = getPortsBuffer();
+    const display = getDisplayBuffer();
+    self.postMessage({
+        buffer, display
+    }, [buffer, display]);
 }
 
 function loadROM() {
