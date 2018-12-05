@@ -1,5 +1,5 @@
 import { html } from 'lit-html'
-import { withProps } from '../util';
+import { withProps, isHidden, addVisibilityListener, removeVisiblityListener } from '../util';
 import tec1Image from '../assets/TEC-1.jpg';
 
 const keyMap = {
@@ -19,6 +19,7 @@ export const wickedTec1 = withProps({
         this.digits = 0;
         this.segments = 0;
         this.display = Array(6).fill(0);
+        this.handleVisibility = this.handleVisibility.bind(this);
         this.handleKeyDown = this.handleKeyDown.bind(this);
     },
 
@@ -33,11 +34,17 @@ export const wickedTec1 = withProps({
         }
         this.worker.postMessage({ type: 'INIT' });
         document.addEventListener("keydown", this.handleKeyDown);
+        addVisibilityListener(this.handleVisibility);
     },
 
     ondisconnected(event) {
         this.worker.terminate();
         document.removeEventListener("keydown", this.handleKeyDown);
+        removeVisiblityListener(this.handleVisibility);
+    },
+
+    handleVisibility() {
+        this.worker.postMessage({ type: 'HIDDEN', value: isHidden() });
     },
 
     handleKeyDown(event) {
@@ -53,11 +60,11 @@ export const wickedTec1 = withProps({
     handleButton(code, shiftKey, ctrlKey) {
         if (code === 'Escape') {
             this.worker.postMessage({ type: 'RESET' });
+            return true;
         }
-        if (code === 'KeyQ') {
-            if (ctrlKey) {
-                this.worker.postMessage({ type: 'EXIT' });
-            }
+        if (code === 'Space') {
+            this.worker.postMessage({ type: 'PAUSE' });
+            return true;
         }
         else if (code in keyMap) {
             let keyCode = keyMap[code];
@@ -66,6 +73,7 @@ export const wickedTec1 = withProps({
             }
             this.worker.postMessage({ type: 'SET_INPUT_VALUE', port: 0, value: keyCode });
             this.worker.postMessage({ type: 'NMI' });
+            return true;
         }
     },
 
@@ -101,7 +109,7 @@ export const wickedTec1 = withProps({
         height: 0px;
     }
 
-    [is=key-button]>div {
+    [is=key-button] {
         position: absolute;
         background-color: #cd3d45;
         color: black;
@@ -120,29 +128,7 @@ export const wickedTec1 = withProps({
 </style>
 <div id="tec1">
 
-    <div is="key-button" .text=${ 'AD'} .color=${ '#cd3d45'} .left=${438} .top=${239} @click=${() => this.handleButton('Tab')}></div>
-    <div is="key-button" .text=${ '3'} .color=${ '#efedeb'} .left=${468} .top=${239} @click=${() => this.handleButton('Digit3')}></div>
-    <div is="key-button" .text=${ '7'}  .color=${ '#efedeb'} .left=${500} .top=${239} @click=${() => this.handleButton('Digit7')}></div>
-    <div is="key-button" .text=${ 'B'} .color=${ '#efedeb'} .left=${531} .top=${239} @click=${() => this.handleButton('KeyB')}></div>
-    <div is="key-button" .text=${ 'F'} .color=${ '#efedeb'} .left=${562} .top=${239} @click=${() => this.handleButton('KeyF')}></div>
-
-    <div is="key-button" .text=${ 'GO'} .color=${ '#cd3d45'} .left=${438} .top=${270} @click=${() => this.handleButton('Enter')}></div>
-    <div is="key-button" .text=${ '2'} .color=${ '#efedeb'} .left=${468} .top=${270} @click=${() => this.handleButton('Digit2')}></div>
-    <div is="key-button" .text=${ '6'} .color=${ '#efedeb'} .left=${500} .top=${270} @click=${() => this.handleButton('Digit6')}></div>
-    <div is="key-button" .text=${ 'A'} .color=${ '#efedeb'} .left=${531} .top=${270} @click=${() => this.handleButton('KeyA')}></div>
-    <div is="key-button" .text=${ 'E'} .color=${ '#efedeb'} .left=${562} .top=${270} @click=${() => this.handleButton('KeyE')}></div>
-
-    <div is="key-button" .text=${ '-'}  .color=${ '#cd3d45'} .left=${438} .top=${301} @click=${() => this.handleButton('ArrowDown')}></div>
-    <div is="key-button" .text=${ '1'} .color=${ '#efedeb'} .left=${468} .top=${301} @click=${() => this.handleButton('Digit1')}></div>
-    <div is="key-button" .text=${ '5'} .color=${ '#efedeb'} .left=${500} .top=${301} @click=${() => this.handleButton('Digit5')}></div>
-    <div is="key-button" .text=${ '9'} .color=${ '#efedeb'} .left=${531} .top=${301} @click=${() => this.handleButton('Digit9')}></div>
-    <div is="key-button" .text=${ 'D'} .color=${ '#efedeb'} .left=${562} .top=${301} @click=${() => this.handleButton('KeyD')}></div>
-
-    <div is="key-button" .text=${ '+'}  .color=${ '#cd3d45'} .left=${438} .top=${332} @click=${() => this.handleButton('ArrowUp')}></div>
-    <div is="key-button" .text=${ '0'} .color=${ '#efedeb'} .left=${468} .top=${332} @click=${() => this.handleButton('Digit0')}></div>
-    <div is="key-button" .text=${ '4'} .color=${ '#efedeb'} .left=${500} .top=${332} @click=${() => this.handleButton('Digit4')}></div>
-    <div is="key-button" .text=${ '8'} .color=${ '#efedeb'} .left=${531} .top=${332} @click=${() => this.handleButton('Digit8')}></div>
-    <div is="key-button" .text=${ 'C'} .color=${ '#efedeb'} .left=${562} .top=${332} @click=${() => this.handleButton('KeyC')}></div>
+    <div is="keypad-modern" @click=${(event) => this.handleButton(event.detail.code)}></div>
 
     <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
 

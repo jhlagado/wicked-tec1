@@ -44,8 +44,8 @@ export const instructions = withProps({
                     <td>(-)</td>
                 </tr>
                 <tr>
-                    <td>Ctrl-Q</td>
-                    <td>Terminate</td>
+                    <td>Space</td>
+                    <td>Pause/Resume</td>
                     <td></td>
                 </tr>
             </tbody>

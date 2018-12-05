@@ -2,7 +2,8 @@ import { Z80 } from './z80';
 import { ROM } from './ROM';
 import MemoryMap from 'nrf-intel-hex';
 
-let active = false;
+let running = false;
+let active = true;
 let yieldFlag = false;
 
 const memory = Array(4000).fill(0xFF);
@@ -30,20 +31,27 @@ self.onmessage = event => {
     if (event.data.type === 'INIT') {
         loadROM();
         cpu.reset();
-        active = true;
+        running = true;
         run();
     }
-    if (event.data.type === 'EXIT') {
-        active = false;
-        cpu.reset();
+    if (event.data.type === 'PAUSE') {
+        if (active) {
+            active = false;
+            running = false;
+        }
+        else {
+            active = true;
+            running = true;
+            run();
+        }
+    }
+    if (event.data.type === 'RESUME') {
     }
     else if (event.data.type === 'RESET') {
         console.log('resetting');
         cpu.reset();
-        if (!active) {
-            active = true;
-            run();
-        }
+        running = true;
+        run();
     }
     else if (event.data.type === 'SET_INPUT_VALUE') {
         const { port, value } = event.data;
@@ -52,16 +60,37 @@ self.onmessage = event => {
     else if (event.data.type === 'NMI') {
         cpu.interrupt(true);
     }
+    else if (event.data.type === 'HIDDEN') {
+        let hidden = event.data.value;
+        if (hidden) {
+            running = false;
+        }
+        else if (active) {
+            running = true;
+            run();
+        }
+        else {
+            console.log('not active');
+        }
+    }
 };
 
+let pending = false;
 function run() {
+    if (pending) return;
     for (let i = 0; i < 600 ; i++) {
-        if (!active) return;
+        if (!running) return;
     // while (!yieldFlag) {
         cpu.run_instruction();
     }
     yieldFlag = false;
-    if (active) setTimeout(run, 16);
+    if (running) {
+        pending = true;
+        setTimeout(function(){
+            pending = false;
+            run();
+        }, 16)
+    };
 }
 
 function updateDisplay() {

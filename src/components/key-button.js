@@ -8,10 +8,9 @@ export const keyButton = withProps({
     },
 
     render({ text, color, left, top }) {
+        this.element.style = `background-color:${color};left:${left}px;top:${top}px`;
         return html`
-            <div style="background-color:${color};left:${left}px;top:${top}px">
-                ${text}
-            </div>
+            ${text}
         `;
     },
 });
