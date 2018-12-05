@@ -1,1 +1,3 @@
-import('./app').then(app => app.initApp());
+import {initApp} from './app';
+
+initApp();
