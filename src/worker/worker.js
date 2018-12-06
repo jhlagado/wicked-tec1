@@ -78,7 +78,7 @@ self.onmessage = event => {
 let pending = false;
 function run() {
     if (pending) return;
-    for (let i = 0; i < 600 ; i++) {
+    for (let i = 0; i < 1500 ; i++) {
         if (!running) return;
     // while (!yieldFlag) {
         cpu.run_instruction();
