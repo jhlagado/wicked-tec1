@@ -1,3 +1,7 @@
+var AudioContext = window.AudioContext // Default
+    || window.webkitAudioContext // Safari and old versions of Chrome
+    || false;
+
 let audioCtx;
 let source1;
 let active = false;
