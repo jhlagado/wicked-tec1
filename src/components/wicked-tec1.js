@@ -1,7 +1,7 @@
 import { html } from 'lit-html'
 import { withProps, isHidden, addVisibilityListener, removeVisiblityListener } from '../util';
 import tec1Image from '../assets/TEC-1.jpg';
-import {audioInit, audioToggle, isAudioPlaying, audioValue} from '../util/audio';
+import {audioInit, audioPlay, audioValue} from '../util/audio';
 
 const keyMap = {
     Digit0: 0x00, Digit1: 0x01, Digit2: 0x02, Digit3: 0x03,
@@ -49,7 +49,8 @@ export const wickedTec1 = withProps({
     },
 
     handleVisibility() {
-        this.audioPlay(isHidden());
+        console.log('isHidden', isHidden());
+        audioPlay(!isHidden());
         this.worker.postMessage({ type: 'HIDDEN', value: isHidden() });
     },
 
@@ -82,13 +83,6 @@ export const wickedTec1 = withProps({
             this.worker.postMessage({ type: 'NMI' });
             return true;
         }
-    },
-
-    toggleAudio() {
-        audioToggle();
-        this.worker.postMessage({
-            type: isAudioPlaying ? 'AUDIO_PLAY' : 'AUDIO_PAUSE'
-        });
     },
 
     render({ digits, segments, display, wavelength, frequency }) {
