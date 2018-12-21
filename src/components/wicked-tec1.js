@@ -1,6 +1,7 @@
 import { html } from 'lit-html'
 import { withProps, isHidden, addVisibilityListener, removeVisiblityListener } from '../util';
 import tec1Image from '../assets/TEC-1.jpg';
+import {audioInit, audioToggle, isAudioPlaying, audioValue} from '../util/audio';
 
 const keyMap = {
     Digit0: 0x00, Digit1: 0x01, Digit2: 0x02, Digit3: 0x03,
@@ -21,6 +22,7 @@ export const wickedTec1 = withProps({
         this.display = Array(6).fill(0);
         this.handleVisibility = this.handleVisibility.bind(this);
         this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.classic = localStorage.getItem('classic') === 'true';
     },
 
     onconnected(event) {
@@ -31,6 +33,9 @@ export const wickedTec1 = withProps({
             this.segments = view[2];
             this.requestRender();
             this.display = [...new Uint8Array(event.data.display)];
+            this.wavelength = event.data.wavelength;
+            this.frequency = this.wavelength ? 500000/this.wavelength : 0;
+            audioValue(this.frequency);
         }
         this.worker.postMessage({ type: 'INIT' });
         document.addEventListener("keydown", this.handleKeyDown);
@@ -58,6 +63,7 @@ export const wickedTec1 = withProps({
     },
 
     handleButton(code, shiftKey, ctrlKey) {
+        audioInit();
         if (code === 'Escape') {
             this.worker.postMessage({ type: 'RESET' });
             return true;
@@ -77,10 +83,19 @@ export const wickedTec1 = withProps({
         }
     },
 
-    render({ digits, segments, display }) {
+    toggleAudio() {
+        audioToggle();
+        this.worker.postMessage({
+            type: isAudioPlaying ? 'AUDIO_PLAY' : 'AUDIO_PAUSE'
+        });
+    },
+
+    render({ digits, segments, display, wavelength, frequency }) {
         return html`
-<div>digits ${digits} segments ${segments}</div>
 <style>
+    body {
+        font-family: sans-serif;
+    }
     #tec1 {
         width: 600px;
         height: 375px;
@@ -127,15 +142,22 @@ export const wickedTec1 = withProps({
     }
 </style>
 <div id="tec1">
-
-    <div is="keypad-modern" @click=${(event) => this.handleButton(event.detail.code)}></div>
-
+    ${  this.classic ?
+        html`<div is="keypad-classic" @click=${(event) => this.handleButton(event.detail.code)}></div>` :
+        html`<div is="keypad-modern" @click=${(event) => this.handleButton(event.detail.code)}></div>`
+    }
     <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
 
     <div id="digitPane">
         <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
     </div>
 </div>
+<div>classic keyboard <input type="checkbox"
+    ?checked=${this.classic}
+    @change=${event => {
+        this.classic = event.target.checked;
+        localStorage.setItem('classic', String(this.classic))
+    }}></div>
 <div is="instructions" style="margin-left: 35px"></div>
 `;
     },

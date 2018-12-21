@@ -4,8 +4,8 @@ import MemoryMap from 'nrf-intel-hex';
 
 let running = false;
 let active = true;
-let yieldFlag = false;
 
+let cycles = 0;
 const memory = Array(4000).fill(0xFF);
 const inPorts = Array(256).fill(0xFF);
 const outPorts = Array(256).fill(0xFF);
@@ -14,14 +14,13 @@ const cpu = Z80({
     mem_read: (addr) => memory[addr],
     mem_write: (addr, value) => memory[addr] = value,
     io_read: (port) => {
-        yieldFlag = true;
         return inPorts[port & 0xFF];
     },
     io_write: (port, value) => {
-        yieldFlag = true;
-        outPorts[port & 0xFF] = value;
+        const port1 = port & 0xFF;
+        outPorts[port1] = value;
         updateDisplay();
-        postOutPorts();
+        postOutPorts(port1, value);
     },
 });
 
@@ -34,7 +33,7 @@ self.onmessage = event => {
         running = true;
         run();
     }
-    if (event.data.type === 'PAUSE') {
+    else if (event.data.type === 'PAUSE') {
         if (active) {
             active = false;
             running = false;
@@ -45,7 +44,7 @@ self.onmessage = event => {
             run();
         }
     }
-    if (event.data.type === 'RESUME') {
+    else if (event.data.type === 'RESUME') {
     }
     else if (event.data.type === 'RESET') {
         console.log('resetting');
@@ -78,12 +77,12 @@ self.onmessage = event => {
 let pending = false;
 function run() {
     if (pending) return;
-    for (let i = 0; i < 1500 ; i++) {
+    for (let i = 0; i < 1000 ; i++) {
         if (!running) return;
-    // while (!yieldFlag) {
-        cpu.run_instruction();
+        const count = cpu.run_instruction();
+        cycles += count;
     }
-    yieldFlag = false;
+
     if (running) {
         pending = true;
         setTimeout(function(){
@@ -123,11 +122,27 @@ function getDisplayBuffer(){
     return buffer;
 }
 
-function postOutPorts() {
+let speaker = 1;
+let wavelength = 0;
+function postOutPorts(port, value) {
     const buffer = getPortsBuffer();
     const display = getDisplayBuffer();
+
+    if (port === 1 && (value === 0x7F || value === 0xFF)) {
+        const speaker1 = value >> 7;
+        if (speaker1 === 1 && speaker === 0) {
+            wavelength = cycles;
+            cycles = 0;
+        }
+        speaker = speaker1;
+    }
+    if (cycles > 10000) wavelength = 0;
+
     self.postMessage({
-        buffer, display
+        type: 'POST_OUTPORTS',
+        buffer,
+        display,
+        wavelength: wavelength,
     }, [buffer, display]);
 }
 
