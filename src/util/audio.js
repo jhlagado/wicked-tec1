@@ -29,17 +29,19 @@ export function audioInit() {
     active = true;
 }
 
-export function audioPlay() {
+export function audioPlay(state) {
     if (!audioCtx) {
         init();
     }
-    audioCtx.resume();
-    active = true;
-}
-
-export function audioPause() {
-    audioCtx.suspend();
-    active = false;
+    if (active === state) return;
+    if (active) {
+        audioCtx.suspend();
+        active = false;
+    }
+    else {
+        audioCtx.resume();
+        active = true;
+    }
 }
 
 export function audioToggle() {

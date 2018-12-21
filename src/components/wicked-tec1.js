@@ -49,6 +49,7 @@ export const wickedTec1 = withProps({
     },
 
     handleVisibility() {
+        this.audioPlay(isHidden());
         this.worker.postMessage({ type: 'HIDDEN', value: isHidden() });
     },
 
