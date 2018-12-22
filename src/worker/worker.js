@@ -1,5 +1,5 @@
 import { Z80 } from './z80';
-import { ROM } from './ROM';
+import { ROM } from '../roms/MON1';
 import MemoryMap from 'nrf-intel-hex';
 
 let running = false;
