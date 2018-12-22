@@ -51,7 +51,7 @@ module.exports="TEC-1.c2019513.jpg";
 },{}],"P4dJ":[function(require,module,exports) {
 "use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.audioValue=i,exports.isAudioPlaying=r,exports.audioInit=s,exports.audioPlay=a,exports.audioToggle=c;var e=window.AudioContext||window.webkitAudioContext||!1;let t,o,n=!1;function u(){t=new e,o&&o.stop(),(o=t.createOscillator()).type="square",o.frequency.value=440,o.connect(t.destination),o.start()}function i(e){null!=e&&n&&o.frequency.setValueAtTime(e,t.currentTime)}function r(){return n}function s(){t||u(),n=!0}function a(e){t||u(),n!==e&&(n?(t.suspend(),n=!1):(t.resume(),n=!0))}function c(){n?audioPause():a()}
 },{}],"tH/w":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.wickedTec1=void 0;var e=require("lit-html"),i=require("../util"),t=d(require("../assets/TEC-1.jpg")),s=require("../util/audio");function d(e){return e&&e.__esModule?e:{default:e}}const n={Digit0:0,Digit1:1,Digit2:2,Digit3:3,Digit4:4,Digit5:5,Digit6:6,Digit7:7,Digit8:8,Digit9:9,KeyA:10,KeyB:11,KeyC:12,KeyD:13,KeyE:14,KeyF:15,Space:19,Tab:19,Enter:18,Minus:17,ArrowDown:17,ArrowUp:16},a=(0,i.withProps)({init:function(e){this.digits=0,this.segments=0,this.display=Array(6).fill(0),this.handleVisibility=this.handleVisibility.bind(this),this.handleKeyDown=this.handleKeyDown.bind(this),this.classic="true"===localStorage.getItem("classic"),this.speed=localStorage.getItem("speed")},onconnected(e){this.worker=new Worker("worker.b87aad29.js"),this.worker.onmessage=(e=>{let i=new Uint8Array(e.data.buffer);this.digits=i[1],this.segments=i[2],this.requestRender(),this.display=[...new Uint8Array(e.data.display)],this.wavelength=e.data.wavelength,this.frequency=this.wavelength?5e5/this.wavelength:0,(0,s.audioValue)(this.frequency)}),this.worker.postMessage({type:"INIT"}),this.postSpeed(this.speed),document.addEventListener("keydown",this.handleKeyDown),(0,i.addVisibilityListener)(this.handleVisibility)},ondisconnected(e){this.worker.terminate(),document.removeEventListener("keydown",this.handleKeyDown),(0,i.removeVisiblityListener)(this.handleVisibility)},handleVisibility(){console.log("isHidden",(0,i.isHidden)()),(0,s.audioPlay)(!(0,i.isHidden)()),this.worker.postMessage({type:"HIDDEN",value:(0,i.isHidden)()})},handleKeyDown(e){this.handleButton(e.code,e.shiftKey,e.ctrlKey)?e.preventDefault():console.log(e,e.code,e.key)},handleButton(e,i,t){if((0,s.audioInit)(),"Escape"===e)return this.worker.postMessage({type:"RESET"}),!0;if("Space"===e)return this.worker.postMessage({type:"PAUSE"}),!0;if(e in n){let t=n[e];return i&&(t|=128),this.worker.postMessage({type:"SET_INPUT_VALUE",port:0,value:t}),this.worker.postMessage({type:"NMI"}),!0}},postSpeed(e){this.worker.postMessage({type:"SET_SPEED",value:e})},render({digits:i,segments:s,display:d,wavelength:n,frequency:a}){return e.html`
+"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.wickedTec1=void 0;var e=require("lit-html"),i=require("../util"),t=d(require("../assets/TEC-1.jpg")),s=require("../util/audio");function d(e){return e&&e.__esModule?e:{default:e}}const n={Digit0:0,Digit1:1,Digit2:2,Digit3:3,Digit4:4,Digit5:5,Digit6:6,Digit7:7,Digit8:8,Digit9:9,KeyA:10,KeyB:11,KeyC:12,KeyD:13,KeyE:14,KeyF:15,Space:19,Tab:19,Enter:18,Minus:17,ArrowDown:17,ArrowUp:16},a=(0,i.withProps)({init:function(e){this.digits=0,this.segments=0,this.display=Array(6).fill(0),this.handleVisibility=this.handleVisibility.bind(this),this.handleKeyDown=this.handleKeyDown.bind(this),this.classic="true"===localStorage.getItem("classic"),this.speed=localStorage.getItem("speed")},onconnected(e){this.worker=new Worker("worker.5b009a63.js"),this.worker.onmessage=(e=>{let i=new Uint8Array(e.data.buffer);this.digits=i[1],this.segments=i[2],this.requestRender(),this.display=[...new Uint8Array(e.data.display)],this.wavelength=e.data.wavelength,this.frequency=this.wavelength?5e5/this.wavelength:0,(0,s.audioValue)(this.frequency)}),this.worker.postMessage({type:"INIT"}),this.postSpeed(this.speed),document.addEventListener("keydown",this.handleKeyDown),(0,i.addVisibilityListener)(this.handleVisibility)},ondisconnected(e){this.worker.terminate(),document.removeEventListener("keydown",this.handleKeyDown),(0,i.removeVisiblityListener)(this.handleVisibility)},handleVisibility(){console.log("isHidden",(0,i.isHidden)()),(0,s.audioPlay)(!(0,i.isHidden)()),this.worker.postMessage({type:"HIDDEN",value:(0,i.isHidden)()})},handleKeyDown(e){this.handleButton(e.code,e.shiftKey,e.ctrlKey)?e.preventDefault():console.log(e,e.code,e.key)},handleButton(e,i,t){if((0,s.audioInit)(),"Escape"===e)return this.worker.postMessage({type:"RESET"}),!0;if("Space"===e)return this.worker.postMessage({type:"PAUSE"}),!0;if(e in n){let t=n[e];return i&&(t|=128),this.worker.postMessage({type:"SET_INPUT_VALUE",port:0,value:t}),this.worker.postMessage({type:"NMI"}),!0}},postSpeed(e){this.worker.postMessage({type:"SET_SPEED",value:e})},render({digits:i,segments:s,display:d,wavelength:n,frequency:a}){return e.html`
 <style>
     body {
         font-family: sans-serif;
@@ -131,22 +131,19 @@ module.exports="TEC-1.c2019513.jpg";
     <p>MON 1 Restarts:</p>
     <div style="display:flex; justify-content:space-between">
         <div>
-            <div>C7 (RST 0)	RESET</div>
             <div>CF (RST 1)	INVADERS</div>
             <div>D7 (RST 2)	NIM</div>
             <div>DF (RST 3)	LUNALANDER</div>
         </div>
         <div>
-            <div>E7 (RST 4)	-</div>
             <div>EF (RST 5)	TUNE 1 Bealach An Doirín</div>
             <div>F7 (RST 6)	TUNE 2 Biking down the Strand</div>
-            <div>FF (RST 7)	WELCOME MESSAGE</div>
         </div>
     </div>
 </div>
 <!-- <div is="instructions" style="margin-left: 35px"></div> -->
 `}});exports.wickedTec1=a;
-},{"lit-html":"KMqM","../util":"WLd9","../assets/TEC-1.jpg":"QWBP","../util/audio":"P4dJ","./../worker/worker.js":[["worker.b87aad29.js","nnuQ"],"worker.b87aad29.map","nnuQ"]}],"6Rl6":[function(require,module,exports) {
+},{"lit-html":"KMqM","../util":"WLd9","../assets/TEC-1.jpg":"QWBP","../util/audio":"P4dJ","./../worker/worker.js":[["worker.5b009a63.js","nnuQ"],"worker.5b009a63.map","nnuQ"]}],"6Rl6":[function(require,module,exports) {
 "use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.sevenSegDisplay=void 0;var e=require("lit-html"),s=require("../util");const i=(0,s.withProps)({init(e){this.display0=Array(6).fill(0),this.display=[...this.display0],this.blanks=0},get observedProperties(){return["digits","segments","display"]},render:({digits:s,segments:i,display:t})=>e.html`
 <div style="white-space: nowrap;">${t.map((s,i)=>e.html`
 <span is="seven-seg" style=${1==i?"margin-left:2.2%":""} .segments=${s}>
@@ -278,4 +275,4 @@ module.exports="TEC-1.c2019513.jpg";
 },{"wicked-elements":"8+Lu","./components/wicked-tec1":"tH/w","./components/seven-seg-display":"6Rl6","./components/seven-seg":"Y3is","./components/instructions":"K4QV","./components/key-button":"MzdT","./components/keypad-classic":"NlCz","./components/keypad-modern":"Lu1m"}],"H99C":[function(require,module,exports) {
 "use strict";var i=require("./app");(0,i.initApp)();
 },{"./app":"vZyd"}]},{},["H99C"], null)
-//# sourceMappingURL=src.7c0c0434.map
+//# sourceMappingURL=src.593a7517.map

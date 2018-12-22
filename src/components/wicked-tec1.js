@@ -183,16 +183,13 @@ export const wickedTec1 = withProps({
     <p>MON 1 Restarts:</p>
     <div style="display:flex; justify-content:space-between">
         <div>
-            <div>C7 (RST 0)	RESET</div>
             <div>CF (RST 1)	INVADERS</div>
             <div>D7 (RST 2)	NIM</div>
             <div>DF (RST 3)	LUNALANDER</div>
         </div>
         <div>
-            <div>E7 (RST 4)	-</div>
             <div>EF (RST 5)	TUNE 1 Bealach An Doirín</div>
             <div>F7 (RST 6)	TUNE 2 Biking down the Strand</div>
-            <div>FF (RST 7)	WELCOME MESSAGE</div>
         </div>
     </div>
 </div>
