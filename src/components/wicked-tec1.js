@@ -23,6 +23,7 @@ export const wickedTec1 = withProps({
         this.handleVisibility = this.handleVisibility.bind(this);
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.classic = localStorage.getItem('classic') === 'true';
+        this.speed = localStorage.getItem('speed');
     },
 
     onconnected(event) {
@@ -38,6 +39,7 @@ export const wickedTec1 = withProps({
             audioValue(this.frequency);
         }
         this.worker.postMessage({ type: 'INIT' });
+        this.postSpeed(this.speed);
         document.addEventListener("keydown", this.handleKeyDown);
         addVisibilityListener(this.handleVisibility);
     },
@@ -83,6 +85,10 @@ export const wickedTec1 = withProps({
             this.worker.postMessage({ type: 'NMI' });
             return true;
         }
+    },
+
+    postSpeed(speed) {
+        this.worker.postMessage({ type: 'SET_SPEED', value: speed });
     },
 
     render({ digits, segments, display, wavelength, frequency }) {
@@ -136,24 +142,61 @@ export const wickedTec1 = withProps({
         top: 301px;
     }
 </style>
-<div id="tec1">
-    ${  this.classic ?
-        html`<div is="keypad-classic" @click=${(event) => this.handleButton(event.detail.code)}></div>` :
-        html`<div is="keypad-modern" @click=${(event) => this.handleButton(event.detail.code)}></div>`
-    }
-    <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
+<div style="display:inline-block">
+    <div id="tec1">
+        ${  this.classic ?
+            html`<div is="keypad-classic" @click=${(event) => this.handleButton(event.detail.code)}></div>` :
+            html`<div is="keypad-modern" @click=${(event) => this.handleButton(event.detail.code)}></div>`
+        }
+        <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
 
-    <div id="digitPane">
-        <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
+        <div id="digitPane">
+            <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
+        </div>
+    </div>
+    <div style="display:flex; justify-content:space-between;">
+        <div>
+            <input type="checkbox"
+                ?checked=${this.classic}
+                @change=${event => {
+                    this.classic = event.target.checked;
+                    localStorage.setItem('classic', String(this.classic))
+                }}
+                >original key layout
+        </div>
+        <div>
+            Speed
+            <input
+                type="range"
+                min="0"
+                max="99"
+                value=${this.speed || "50"}
+                @change=${event => {
+                    this.speed = event.target.value;
+                    localStorage.setItem('speed', String(this.speed))
+                    this.worker.postMessage({ type: 'SET_SPEED', value: this.speed });
+                    this.postSpeed(this.speed);
+                }}
+                >
+        </div>
+    </div>
+    <p>MON 1 Restarts:</p>
+    <div style="display:flex; justify-content:space-between">
+        <div>
+            <div>C7 (RST 0)	RESET</div>
+            <div>CF (RST 1)	INVADERS</div>
+            <div>D7 (RST 2)	NIM</div>
+            <div>DF (RST 3)	LUNALANDER</div>
+        </div>
+        <div>
+            <div>E7 (RST 4)	-</div>
+            <div>EF (RST 5)	TUNE 1 Biking down the Strand</div>
+            <div>F7 (RST 6)	TUNE 2 Bealach An Doirín</div>
+            <div>FF (RST 7)	WELCOME MESSAGE</div>
+        </div>
     </div>
 </div>
-<div>classic keyboard <input type="checkbox"
-    ?checked=${this.classic}
-    @change=${event => {
-        this.classic = event.target.checked;
-        localStorage.setItem('classic', String(this.classic))
-    }}></div>
-<div is="instructions" style="margin-left: 35px"></div>
+<!-- <div is="instructions" style="margin-left: 35px"></div> -->
 `;
     },
 });

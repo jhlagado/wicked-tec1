@@ -11,7 +11,7 @@ function init() {
     if (source1) source1.stop();
     source1 = audioCtx.createOscillator();
     source1.type = 'square';
-    source1.frequency.setValueAtTime(440, audioCtx.currentTime); // value in hertz
+    source1.frequency.value = 440;
     source1.connect(audioCtx.destination);
     source1.start();
 }

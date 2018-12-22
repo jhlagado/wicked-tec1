@@ -4,9 +4,10 @@ import MemoryMap from 'nrf-intel-hex';
 
 let running = false;
 let active = true;
+let speed = 30;
 
 let cycles = 0;
-const memory = Array(4000).fill(0xFF);
+const memory = Array(0xFFFF).fill(0xFF);
 const inPorts = Array(256).fill(0xFF);
 const outPorts = Array(256).fill(0xFF);
 
@@ -56,39 +57,51 @@ self.onmessage = event => {
         const { port, value } = event.data;
         inPorts[port] = value;
     }
+    else if (event.data.type === 'SET_SPEED') {
+        speed = Number(event.data.value)/100;
+        console.log('set speed', speed);
+    }
     else if (event.data.type === 'NMI') {
         cpu.interrupt(true);
     }
-    else if (event.data.type === 'HIDDEN') {
-        let hidden = event.data.value;
-        if (hidden) {
-            running = false;
-        }
-        else if (active) {
-            running = true;
-            run();
-        }
-        else {
-            console.log('not active');
-        }
-    }
+    // else if (event.data.type === 'HIDDEN') {
+    //     let hidden = event.data.value;
+    //     if (hidden) {
+    //         running = false;
+    //     }
+    //     else if (active) {
+    //         running = true;
+    //         run();
+    //     }
+    //     else {
+    //         console.log('not active');
+    //     }
+    // }
 };
 
+function* runGen () {
+    while (true){
+        for (let i = 0; i < 1000 ; i++) {
+            if (!running) return;
+            const count = cpu.run_instruction();
+            cycles += count;
+        }
+        yield cycles;
+    }
+}
+
 let pending = false;
+const iter = runGen();
 function run() {
     if (pending) return;
-    for (let i = 0; i < 1000 ; i++) {
-        if (!running) return;
-        const count = cpu.run_instruction();
-        cycles += count;
-    }
-
+    iter.next();
+    const delay = Math.floor((1 - Number(speed)) * 30);
     if (running) {
         pending = true;
         setTimeout(function(){
             pending = false;
             run();
-        }, 16)
+        }, delay)
     };
 }
 
@@ -142,6 +155,7 @@ function postOutPorts(port, value) {
         type: 'POST_OUTPORTS',
         buffer,
         display,
+        speaker,
         wavelength: wavelength,
     }, [buffer, display]);
 }
@@ -150,9 +164,9 @@ function loadROM() {
     const blocks = MemoryMap.fromHex(ROM);
 
     for (let address of blocks.keys()) {
-      const block = blocks.get(address);
-      for (let i = address; i < address + block.length; i++) {
+        const block = blocks.get(address);
+        for (let i = address; i < address + block.length; i++) {
         memory[i] = block[i];
-      }
+        }
     }
-  }
+}
