@@ -138,8 +138,8 @@ module.exports="TEC-1.c2019513.jpg";
         </div>
         <div>
             <div>E7 (RST 4)	-</div>
-            <div>EF (RST 5)	TUNE 1 Biking down the Strand</div>
-            <div>F7 (RST 6)	TUNE 2 Bealach An Doirín</div>
+            <div>EF (RST 5)	TUNE 1 Bealach An Doirín</div>
+            <div>F7 (RST 6)	TUNE 2 Biking down the Strand</div>
             <div>FF (RST 7)	WELCOME MESSAGE</div>
         </div>
     </div>
@@ -278,4 +278,4 @@ module.exports="TEC-1.c2019513.jpg";
 },{"wicked-elements":"8+Lu","./components/wicked-tec1":"tH/w","./components/seven-seg-display":"6Rl6","./components/seven-seg":"Y3is","./components/instructions":"K4QV","./components/key-button":"MzdT","./components/keypad-classic":"NlCz","./components/keypad-modern":"Lu1m"}],"H99C":[function(require,module,exports) {
 "use strict";var i=require("./app");(0,i.initApp)();
 },{"./app":"vZyd"}]},{},["H99C"], null)
-//# sourceMappingURL=src.726f968c.map
+//# sourceMappingURL=src.7c0c0434.map

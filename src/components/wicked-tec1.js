@@ -190,8 +190,8 @@ export const wickedTec1 = withProps({
         </div>
         <div>
             <div>E7 (RST 4)	-</div>
-            <div>EF (RST 5)	TUNE 1 Biking down the Strand</div>
-            <div>F7 (RST 6)	TUNE 2 Bealach An Doirín</div>
+            <div>EF (RST 5)	TUNE 1 Bealach An Doirín</div>
+            <div>F7 (RST 6)	TUNE 2 Biking down the Strand</div>
             <div>FF (RST 7)	WELCOME MESSAGE</div>
         </div>
     </div>
