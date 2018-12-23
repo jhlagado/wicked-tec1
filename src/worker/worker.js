@@ -29,7 +29,7 @@ const display = Array(6).fill(0);
 
 self.onmessage = event => {
     if (event.data.type === 'INIT') {
-        loadROM();
+        updateMemory(ROM);
         cpu.reset();
         running = true;
         run();
@@ -64,25 +64,28 @@ self.onmessage = event => {
     else if (event.data.type === 'NMI') {
         cpu.interrupt(true);
     }
-    // else if (event.data.type === 'HIDDEN') {
-    //     let hidden = event.data.value;
-    //     if (hidden) {
-    //         running = false;
-    //     }
-    //     else if (active) {
-    //         running = true;
-    //         run();
-    //     }
-    //     else {
-    //         console.log('not active');
-    //     }
-    // }
+    else if (event.data.type === 'UPDATE_MEMORY') {
+        updateMemory(event.data.value);
+        cpu.reset();
+    }
+    else if (event.data.type === 'HIDDEN') {
+        let hidden = event.data.value;
+        if (hidden) {
+            running = false;
+        }
+        else if (active) {
+            running = true;
+            run();
+        }
+        else {
+            console.log('not active');
+        }
+    }
 };
 
 function* runGen () {
     while (true){
         for (let i = 0; i < 1000 ; i++) {
-            if (!running) return;
             const count = cpu.run_instruction();
             cycles += count;
         }
@@ -94,6 +97,7 @@ let pending = false;
 const iter = runGen();
 function run() {
     if (pending) return;
+    if (!running) return;
     iter.next();
     const delay = Math.floor((1 - Number(speed)) * 30);
     if (running) {
@@ -160,13 +164,13 @@ function postOutPorts(port, value) {
     }, [buffer, display]);
 }
 
-function loadROM() {
-    const blocks = MemoryMap.fromHex(ROM);
+function updateMemory(rom) {
+    const blocks = MemoryMap.fromHex(rom);
 
     for (let address of blocks.keys()) {
         const block = blocks.get(address);
         for (let i = address; i < address + block.length; i++) {
-        memory[i] = block[i];
+            memory[i] = block[i];
         }
     }
 }

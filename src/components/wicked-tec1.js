@@ -87,6 +87,17 @@ export const wickedTec1 = withProps({
         }
     },
 
+    handleUpload(event) {
+        const files = event.target.files;
+        if (files == null || files.length === 0) return;
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+            this.worker.postMessage({ type: 'UPDATE_MEMORY', value: reader.result });
+        }
+        reader.readAsText(file);
+    },
+
     postSpeed(speed) {
         this.worker.postMessage({ type: 'SET_SPEED', value: speed });
     },
@@ -164,6 +175,7 @@ export const wickedTec1 = withProps({
                 }}
                 >original key layout
         </div>
+        <input type="file" @change=${event => this.handleUpload(event)}>
         <div>
             Speed
             <input
