@@ -97,14 +97,25 @@ export const wickedTec1 = withProps({
         }
     },
 
+    handleChangeROM(event) {
+        const name = event.target.value;
+        const p =
+            (name == 'MON-1A') ? import('../roms/MON-1A') :
+            (name == 'MON-1B') ? import('../roms/MON-1B') :
+            (name == 'MON-2') ? import('../roms/MON-2') :
+            import('../roms/MON-1');
+        p.then(result =>
+            this.worker.postMessage({ type: 'UPDATE_MEMORY', value: result.ROM })
+        );
+    },
+
     handleUpload(event) {
         const files = event.target.files;
         if (files == null || files.length === 0) return;
         const file = files[0];
         const reader = new FileReader();
-        reader.onload = () => {
+        reader.onload = () =>
             this.worker.postMessage({ type: 'UPDATE_MEMORY', value: reader.result });
-        }
         reader.readAsText(file);
     },
 
@@ -117,6 +128,7 @@ export const wickedTec1 = withProps({
 <style>
     body {
         font-family: sans-serif;
+        font-size: 14px;
     }
     #tec1 {
         width: 600px;
@@ -152,6 +164,18 @@ export const wickedTec1 = withProps({
     }
 </style>
 <div style="display:inline-block">
+<div style="display:flex; justify-content:space-between; align-items: center; margin: 3px">
+        <div>
+            ROM
+            <select @change=${event => this.handleChangeROM(event)}>
+                <option>MON-1</option>
+                <option>MON-1A</option>
+                <option>MON-1B</option>
+                <option>MON-2</option>
+            </select>
+        </div>
+        <input type="file" @change=${event => this.handleUpload(event)}>
+    </div>
     <div id="tec1">
         ${  this.classic ?
             html`<div is="keypad-classic" @click=${(event) => this.handleButton(event.detail.code)}></div>` :
@@ -164,7 +188,7 @@ export const wickedTec1 = withProps({
             <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
         </div>
     </div>
-    <div style="display:flex; justify-content:space-between;">
+    <div style="display:flex; justify-content:space-between; align-items: center; margin: 3px">
         <div>
             <input type="checkbox"
                 ?checked=${this.classic}
@@ -174,7 +198,6 @@ export const wickedTec1 = withProps({
                 }}
                 >original key layout
         </div>
-        <input type="file" @change=${event => this.handleUpload(event)}>
         <div>
             Speed
             <input
