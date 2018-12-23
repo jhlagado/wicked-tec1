@@ -2563,6 +2563,7 @@ const wickedTec1 = (0, _util.withProps)({
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.classic = localStorage.getItem('classic') === 'true';
     this.speed = localStorage.getItem('speed');
+    this.shiftLocked = false;
   },
 
   onconnected(event) {
@@ -2625,17 +2626,26 @@ const wickedTec1 = (0, _util.withProps)({
         type: 'PAUSE'
       });
       return true;
+    }
+
+    if (code === 'ShiftLock') {
+      this.shiftLocked = !this.shiftLocked;
+      return true;
     } else if (code in keyMap) {
       let keyCode = keyMap[code];
 
       if (shiftKey) {
-        keyCode = keyCode | 0x80;
+        this.shiftLocked = true;
+        ;
       }
 
+      const bit5 = 0b00100000;
+      const keyCode1 = this.shiftLocked ? keyCode & ~bit5 : keyCode | bit5;
+      this.shiftLocked = false;
       this.worker.postMessage({
         type: 'SET_INPUT_VALUE',
         port: 0,
-        value: keyCode
+        value: keyCode1
       });
       this.worker.postMessage({
         type: 'NMI'
@@ -2671,8 +2681,7 @@ const wickedTec1 = (0, _util.withProps)({
     digits,
     segments,
     display,
-    wavelength,
-    frequency
+    shiftLocked
   }) {
     return _litHtml.html`
 <style>
@@ -2693,18 +2702,6 @@ const wickedTec1 = (0, _util.withProps)({
         position: relative;
         top: 74.4%;
         right: 42.5%;
-    }
-
-    .off {
-        fill: #320000;
-    }
-
-    .on {
-        fill: red;
-    }
-
-    [is=key-button] {
-        height: 0px;
     }
 
     [is=key-button] {
@@ -2728,6 +2725,7 @@ const wickedTec1 = (0, _util.withProps)({
     <div id="tec1">
         ${this.classic ? _litHtml.html`<div is="keypad-classic" @click=${event => this.handleButton(event.detail.code)}></div>` : _litHtml.html`<div is="keypad-modern" @click=${event => this.handleButton(event.detail.code)}></div>`}
         <div is="key-button" .text=${'R'}  .color=${'#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
+        <div is="key-button" .text=${'SH'}  .color=${shiftLocked ? '#d8696f' : '#cd3d45'} .left=${386} .top=${333} @click=${() => this.handleButton('ShiftLock')}></div>
 
         <div id="digitPane">
             <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
@@ -2831,6 +2829,8 @@ var _litHtml = require("lit-html");
 
 var _util = require("../util");
 
+const getFill = (segments, mask) => segments & mask ? 'red' : '#320000';
+
 const sevenSeg = (0, _util.withProps)({
   get observedProperties() {
     return ['segments'];
@@ -2840,17 +2840,17 @@ const sevenSeg = (0, _util.withProps)({
     segments
   }) {
     return _litHtml.html`
-            <div style="display:inline-block;width:4.35%;margin-left:1.7%;">
+            <div style="display:inline-block;width:4.34%;margin-left:1.6%;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -1 12 20">
                     <g class="digit">
-                        <polygon id="a" class=${segments & 0x01 ? 'on' : 'off'} points=" 1, 1  2, 0  8, 0  9, 1  8, 2  2, 2" />
-                        <polygon id="b" class=${segments & 0x08 ? 'on' : 'off'} points=" 9, 1 10, 2 10, 8  9, 9  8, 8  8, 2" />
-                        <polygon id="c" class=${segments & 0x20 ? 'on' : 'off'} points=" 9, 9 10,10 10,16  9,17  8,16  8,10" />
-                        <polygon id="d" class=${segments & 0x80 ? 'on' : 'off'} points=" 9,17  8,18  2,18  1,17  2,16  8,16" />
-                        <polygon id="e" class=${segments & 0x40 ? 'on' : 'off'} points=" 1,17  0,16  0,10  1, 9  2,10  2,16" />
-                        <polygon id="f" class=${segments & 0x02 ? 'on' : 'off'} points=" 1, 9  0, 8  0, 2  1, 1  2, 2  2, 8" />
-                        <polygon id="g" class=${segments & 0x04 ? 'on' : 'off'} points=" 1, 9  2, 8  8, 8  9, 9  8,10  2,10" />
-                        <circle class=${segments & 0x10 ? 'on' : 'off'} cx="11" cy="17" r="1" />
+                        <polygon id="a" fill=${getFill(segments, 0x01)} points=" 1, 1  2, 0  8, 0  9, 1  8, 2  2, 2" />
+                        <polygon id="b" fill=${getFill(segments, 0x08)} points=" 9, 1 10, 2 10, 8  9, 9  8, 8  8, 2" />
+                        <polygon id="c" fill=${getFill(segments, 0x20)} points=" 9, 9 10,10 10,16  9,17  8,16  8,10" />
+                        <polygon id="d" fill=${getFill(segments, 0x80)} points=" 9,17  8,18  2,18  1,17  2,16  8,16" />
+                        <polygon id="e" fill=${getFill(segments, 0x40)} points=" 1,17  0,16  0,10  1, 9  2,10  2,16" />
+                        <polygon id="f" fill=${getFill(segments, 0x02)} points=" 1, 9  0, 8  0, 2  1, 1  2, 2  2, 8" />
+                        <polygon id="g" fill=${getFill(segments, 0x04)} points=" 1, 9  2, 8  8, 8  9, 9  8,10  2,10" />
+                        <circle fill=${getFill(segments, 0x10)} cx="11" cy="17" r="1" />
                     </g>
                 </svg>
             </div>

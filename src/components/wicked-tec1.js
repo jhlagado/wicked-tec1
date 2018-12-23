@@ -24,6 +24,7 @@ export const wickedTec1 = withProps({
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.classic = localStorage.getItem('classic') === 'true';
         this.speed = localStorage.getItem('speed');
+        this.shiftLocked = false;
     },
 
     onconnected(event) {
@@ -76,12 +77,21 @@ export const wickedTec1 = withProps({
             this.worker.postMessage({ type: 'PAUSE' });
             return true;
         }
+        if (code === 'ShiftLock') {
+            this.shiftLocked = !this.shiftLocked;
+            return true;
+        }
         else if (code in keyMap) {
             let keyCode = keyMap[code];
             if (shiftKey) {
-                keyCode = keyCode | 0x80;
+                this.shiftLocked = true;;
             }
-            this.worker.postMessage({ type: 'SET_INPUT_VALUE', port: 0, value: keyCode });
+            const bit5 = 0b00100000;
+            const keyCode1 = this.shiftLocked ?
+                keyCode & ~bit5 :
+                keyCode | bit5;
+            this.shiftLocked = false;
+            this.worker.postMessage({ type: 'SET_INPUT_VALUE', port: 0, value: keyCode1 });
             this.worker.postMessage({ type: 'NMI' });
             return true;
         }
@@ -102,7 +112,7 @@ export const wickedTec1 = withProps({
         this.worker.postMessage({ type: 'SET_SPEED', value: speed });
     },
 
-    render({ digits, segments, display, wavelength, frequency }) {
+    render({ digits, segments, display, shiftLocked }) {
         return html`
 <style>
     body {
@@ -122,18 +132,6 @@ export const wickedTec1 = withProps({
         position: relative;
         top: 74.4%;
         right: 42.5%;
-    }
-
-    .off {
-        fill: #320000;
-    }
-
-    .on {
-        fill: red;
-    }
-
-    [is=key-button] {
-        height: 0px;
     }
 
     [is=key-button] {
@@ -160,6 +158,7 @@ export const wickedTec1 = withProps({
             html`<div is="keypad-modern" @click=${(event) => this.handleButton(event.detail.code)}></div>`
         }
         <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
+        <div is="key-button" .text=${ 'SH'}  .color=${ shiftLocked ? '#d8696f' : '#cd3d45'} .left=${386} .top=${333} @click=${() => this.handleButton('ShiftLock')}></div>
 
         <div id="digitPane">
             <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
