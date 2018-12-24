@@ -16,9 +16,7 @@ that, yes, you most certainly can. You can see the result of my experimentation,
 - [Introducing the TEC-1 early 1983](http://www.talkingelectronics.com/TE-1-15_pdfs/TE-Issue10.pdf)
 
 ### Things left ToDo
-- Upload / Download RAM and ROM
-- Switch ROMs
-    - Mon 2
-    - JMON
-    - Additional util ROM
-- Shift button
+- Download RAM
+- JMON
+- Utility ROM
+- Offline operation

@@ -97,8 +97,7 @@ export const wickedTec1 = withProps({
         }
     },
 
-    handleChangeROM(event) {
-        const name = event.target.value;
+    handleChangeROM(name) {
         const p =
             (name == 'MON-1A') ? import('../roms/MON-1A') :
             (name == 'MON-1B') ? import('../roms/MON-1B') :
@@ -164,17 +163,20 @@ export const wickedTec1 = withProps({
     }
 </style>
 <div style="display:inline-block">
-<div style="display:flex; justify-content:space-between; align-items: center; margin: 3px">
+    <div style="display:flex; justify-content:space-between; align-items: center; margin: 3px">
+        <div>
+            HEX
+            <input type="file" accept=".hex" @change=${event => this.handleUpload(event)}>
+        </div>
         <div>
             ROM
-            <select @change=${event => this.handleChangeROM(event)}>
+            <select @change=${event => this.handleChangeROM(event.target.value)}>
                 <option>MON-1</option>
                 <option>MON-1A</option>
                 <option>MON-1B</option>
                 <option>MON-2</option>
             </select>
         </div>
-        <input type="file" @change=${event => this.handleUpload(event)}>
     </div>
     <div id="tec1">
         ${  this.classic ?
