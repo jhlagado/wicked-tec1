@@ -6,11 +6,10 @@
   "scripts": {
     "test": "jest --env=jsdom --colors --coverage spec --watch",
     "test-travis": "jest --env=jsdom --colors --coverage spec",
-    "start": "npm run build1 && parcel index.html --open -p 3000",
-    "build": "npm run build1 && parcel build index.html --public-url ./",
-    "build1": "rimraf dist && cross-env NODE_ENV=legacy parcel build index-ie.html --no-cache --public-url ./",
+    "start": "parcel index.html --open -p 3000",
+    "build": "parcel build index.html --public-url ./",
     "lh": "lighthouse-ci",
-    "lighthouse": "lighthouse https://jhlagado.github.io/wicked-tec1  --view --output-path=./lighthouse.html",
+    "lighthouse": "lighthouse https://jhlagado.github.io/wicked-tec1/dist/index.html  --view --output-path=./lighthouse.html",
     "deploy": "gh-pages -d dist"
   },
   "keywords": [
