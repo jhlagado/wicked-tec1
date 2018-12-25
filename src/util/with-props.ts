@@ -15,7 +15,7 @@ export function withProps(def) {
     else {
       this.requestRender();
     }
-    observeProperties(this, event);
+    observeProperties(this);
   }
   return def2;
 };

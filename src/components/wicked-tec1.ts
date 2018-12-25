@@ -28,7 +28,7 @@ export const wickedTec1 = withProps({
     },
 
     onconnected(event) {
-        this.worker = new Worker('../worker/worker.js');
+        this.worker = new Worker('../worker/worker.ts');
         this.worker.onmessage = event => {
             let view = new Uint8Array(event.data.buffer);
             this.digits = view[1];
@@ -41,6 +41,8 @@ export const wickedTec1 = withProps({
         }
         this.worker.postMessage({ type: 'INIT' });
         this.postSpeed(this.speed);
+        // this.handleChangeROM('MON-1');
+
         document.addEventListener("keydown", this.handleKeyDown);
         addVisibilityListener(this.handleVisibility);
     },
@@ -98,12 +100,12 @@ export const wickedTec1 = withProps({
     },
 
     handleChangeROM(name) {
-        const p =
+        const p:Promise<{ROM:string}> =
             (name == 'MON-1A') ? import('../roms/MON-1A') :
             (name == 'MON-1B') ? import('../roms/MON-1B') :
             (name == 'MON-2') ? import('../roms/MON-2') :
             import('../roms/MON-1');
-        p.then(result =>
+        p.then((result) =>
             this.worker.postMessage({ type: 'UPDATE_MEMORY', value: result.ROM })
         );
     },

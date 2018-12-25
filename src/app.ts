@@ -1,4 +1,5 @@
-import wickedElements from 'wicked-elements';
+import * as we from 'wicked-elements';
+const {default: wickedElements} = we;
 
 import { wickedTec1 } from './components/wicked-tec1';
 import { sevenSegDisplay } from './components/seven-seg-display';

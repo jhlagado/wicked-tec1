@@ -1,5 +1,5 @@
-var AudioContext = window.AudioContext // Default
-    || window.webkitAudioContext // Safari and old versions of Chrome
+var AudioContext = (window as any).AudioContext // Default
+    || (window as any).webkitAudioContext // Safari and old versions of Chrome
     || false;
 
 let audioCtx;
@@ -11,7 +11,7 @@ function init() {
     if (source1) source1.stop();
     source1 = audioCtx.createOscillator();
     source1.type = 'square';
-    source1.frequency.value = 440;
+    source1.frequency.value = 0;
     source1.connect(audioCtx.destination);
     source1.start();
 }
@@ -46,11 +46,4 @@ export function audioPlay(state) {
         audioCtx.resume();
         active = true;
     }
-}
-
-export function audioToggle() {
-    if (active)
-        audioPause();
-    else
-        audioPlay();
 }

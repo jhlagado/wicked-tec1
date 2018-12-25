@@ -256,7 +256,7 @@ export function Z80(coreParameter) {
                 decode_instruction(opcode);
             }
             catch (e) {
-                console.log(`Illegal opcode ${opcode} at ${pc}`);
+                console.log(`Illegal opcode ${opcode} at ${pc}`, e);
                 halted = true;
             }
             pc = (pc + 1) & 0xffff;

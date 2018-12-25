@@ -1,5 +1,5 @@
-let [hidden, visibilityChange] = (typeof document.msHidden !== 'undefined') ?
-  ['msHidden', 'msvisibilitychange'] : (typeof document.webkitHidden !== 'undefined') ?
+let [hidden, visibilityChange] = (typeof (document as any).msHidden !== 'undefined') ?
+  ['msHidden', 'msvisibilitychange'] : (typeof (document as any).webkitHidden !== 'undefined') ?
     ['webkitHidden', 'webkitvisibilitychange'] : ['hidden', 'visibilitychange'];
 
 export function isHidden() {

@@ -62,7 +62,7 @@ self.onmessage = event => {
         console.log('set speed', speed);
     }
     else if (event.data.type === 'NMI') {
-        cpu.interrupt(true);
+        cpu.interrupt(true, 0);
     }
     else if (event.data.type === 'UPDATE_MEMORY') {
         updateMemory(event.data.value);
@@ -166,7 +166,6 @@ function postOutPorts(port, value) {
 
 function updateMemory(rom) {
     const blocks = MemoryMap.fromHex(rom);
-
     for (let address of blocks.keys()) {
         const block = blocks.get(address);
         for (let i = address; i < address + block.length; i++) {
