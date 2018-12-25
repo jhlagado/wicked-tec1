@@ -9,7 +9,7 @@ install:
   - yarn install
 after_success:
   - yarn build
-  - yarn lh -- --score=96 https://jhlagado.github.io/wicked-tec1/dist/index.html
+  - yarn lh -- --score=96 https://jhlagado.github.io/wicked-tec1/index.html
 cache:
   directories:
     - node_modules
