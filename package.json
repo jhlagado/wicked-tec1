@@ -39,6 +39,10 @@
   "jest": {
     "verbose": true,
     "testURL": "http://localhost/",
-    "setupTestFrameworkScriptFile": "./test.setup.js"
+    "setupTestFrameworkScriptFile": "./test.setup.js",
+    "testMatch": [
+      "**/__tests__/**/*.ts?(x)",
+      "**/?(*.)+(spec|test).ts?(x)"
+    ]
   }
 }
