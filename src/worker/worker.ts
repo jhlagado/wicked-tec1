@@ -1,5 +1,4 @@
 import { Z80 } from './z80';
-import { ROM } from '../roms/MON-1A';
 import MemoryMap from 'nrf-intel-hex';
 
 let running = false;
@@ -29,7 +28,7 @@ const display = Array(6).fill(0);
 
 self.onmessage = event => {
     if (event.data.type === 'INIT') {
-        updateMemory(ROM);
+        // updateMemory(ROM);
         cpu.reset();
         running = true;
         run();

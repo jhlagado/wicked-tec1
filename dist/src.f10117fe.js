@@ -2594,8 +2594,8 @@ exports.wickedTec1 = util_1.withProps({
     this.worker.postMessage({
       type: 'INIT'
     });
-    this.postSpeed(this.speed); // this.handleChangeROM('MON-1');
-
+    this.postSpeed(this.speed);
+    this.handleChangeROM('MON-1');
     document.addEventListener("keydown", this.handleKeyDown);
     util_1.addVisibilityListener(this.handleVisibility);
   },
@@ -3189,7 +3189,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64980" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "65301" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);

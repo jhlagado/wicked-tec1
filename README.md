@@ -9,7 +9,7 @@ revisit this old design and think about ways that it might still be relevant.
 
 There have been a couple of emulations of the TEC-1 over the years. I wondered whether
 a good enough one could be written in JavaScript and run directly in a browser. It turns out
-that, yes, you most certainly can. You can see the result of my experimentation, a live working version of the TEC-1 [running right here](https://jhlagado.github.io/wicked-tec1/dist/)
+that, yes, you most certainly can. You can see the result of my experimentation, a live working version of the TEC-1 [running right here](https://jhlagado.github.io/wicked-tec1)
 
 ### Resources
 - [An annotated disassembly of the TEC-1 ROMS](https://github.com/jhlagado/TEC-1)

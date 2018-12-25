@@ -41,7 +41,7 @@ export const wickedTec1 = withProps({
         }
         this.worker.postMessage({ type: 'INIT' });
         this.postSpeed(this.speed);
-        // this.handleChangeROM('MON-1');
+        this.handleChangeROM('MON-1');
 
         document.addEventListener("keydown", this.handleKeyDown);
         addVisibilityListener(this.handleVisibility);
