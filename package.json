@@ -9,7 +9,7 @@
     "start": "parcel index.html --open -p 3000",
     "build": "parcel build index.html --public-url ./",
     "lh": "lighthouse-ci",
-    "lighthouse": "lighthouse https://jhlagado.github.io/wicked-tec1/dist/index.html  --view --output-path=./lighthouse.html",
+    "lighthouse": "lighthouse https://jhlagado.github.io/wicked-tec1/index.html  --view --output-path=./lighthouse.html"
   },
   "keywords": [
     "parcel",
