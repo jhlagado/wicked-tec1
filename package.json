@@ -10,7 +10,6 @@
     "build": "parcel build index.html --public-url ./",
     "lh": "lighthouse-ci",
     "lighthouse": "lighthouse https://jhlagado.github.io/wicked-tec1/dist/index.html  --view --output-path=./lighthouse.html",
-    "deploy": "gh-pages -d dist"
   },
   "keywords": [
     "parcel",
@@ -30,7 +29,6 @@
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
     "cross-env": "^5.2.0",
-    "gh-pages": "2.0.1",
     "jest": "23.6.0",
     "lighthouse-ci": "https://github.com/ebidel/lighthouse-ci",
     "parcel-bundler": "^1.9.7",
