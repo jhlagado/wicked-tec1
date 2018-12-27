@@ -179,16 +179,11 @@ function updateMemory(rom:string) {
 }
 
 function readMemory(from:number, size:number) {
-    from = 0x0000;
-    size = 0x800;
-    // let memMap = new MemoryMap();
     let buffer = new ArrayBuffer(size);
     let bytes = new Uint8Array(buffer);
     for (let i = 0; i < size; i++) {
         bytes[i] = memory[i + from]
     }
-    // memMap.set(from, bytes);
-    // let value = memMap.asHexString();
     self.postMessage({
         type: 'POST_MEMORY',
         from,

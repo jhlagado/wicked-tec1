@@ -23,7 +23,6 @@ interface CPUMessage extends Message {
     wavelength: any;
 }
 
-
 interface KeyMap {
     [key: string]: number | null;
 }
@@ -38,6 +37,14 @@ const keyMap:KeyMap = {
     Enter: 0x12, Minus: 0x11,
     ArrowDown: 0x11, ArrowUp: 0x10,
 };
+
+interface KeyEvent {
+    code: any;
+    shiftKey: any;
+    ctrlKey: any;
+    preventDefault: () => void;
+    key: any;
+}
 
 interface AppRootProps {
     digits: number[];
@@ -87,12 +94,10 @@ export const Tec1App = withProps({
                 let memMap = new MemoryMap();
                 let bytes = new Uint8Array(buffer);
                 memMap.set(from, bytes);
-                let value = memMap.asHexString();
-                const url = URL.createObjectURL(new Blob([value], {type: 'application/octet-stream'}));
-                var m = new Date();
-                var fileName = `TEC-1-${(new Date).getTime()}.hex`;
-                anchor.download = fileName;
-                anchor.href = url;
+
+                anchor.download = `TEC-1-${(new Date).getTime()}.hex`;
+                let hexString = memMap.asHexString();
+                anchor.href = URL.createObjectURL(new Blob([hexString], {type: 'application/octet-stream'}));
                 anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
                 anchor.click();
             }
@@ -171,7 +176,7 @@ export const Tec1App = withProps({
         );
     },
 
-    handleUpload(event: { target: { files: Array<Blob>; }; }) {
+    handleUpload(event: any) {
         const files = event.target.files;
         if (files == null || files.length === 0) return;
         const file = files[0];
@@ -182,7 +187,13 @@ export const Tec1App = withProps({
     },
 
     handleDownload() {
-        this.worker.postMessage({ type: 'READ_MEMORY', from: 0, size: 0x800 });
+        const pfrom = window.prompt('Start address (hex)', '0800');
+        const psize = window.prompt('Size (hex)', '1000');
+        if (pfrom != null && psize != null) {
+            const from = parseInt(pfrom, 16);
+            const size = parseInt(psize, 16);
+            this.worker.postMessage({ type: 'READ_MEMORY', from, size });
+        }
     },
 
     postSpeed(speed: string) {
@@ -219,8 +230,8 @@ export const Tec1App = withProps({
     </div>
     <div id="tec1">
         ${  this.classic ?
-            html`<div is="keypad-classic" @click=${(event: { detail: { code: string; }; }) => this.handleButton(event.detail.code)}></div>` :
-            html`<div is="keypad-modern" @click=${(event: { detail: { code: string; }; }) => this.handleButton(event.detail.code)}></div>`
+            html`<div is="keypad-classic" @click=${(event: any) => this.handleButton(event.detail.code)}></div>` :
+            html`<div is="keypad-modern" @click=${(event: any) => this.handleButton(event.detail.code)}></div>`
         }
         <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
         <div is="key-button" .text=${ 'SH'}  .color=${ shiftLocked ? '#d8696f' : '#cd3d45'} .left=${386} .top=${333} @click=${() => this.handleButton('ShiftLock')}></div>
@@ -235,7 +246,7 @@ export const Tec1App = withProps({
                 id="key-layout"
                 type="checkbox"
                 ?checked=${this.classic}
-                @change=${(event: { target: { checked: boolean; }; }) => {
+                @change=${(event: any) => {
                     this.classic = event.target.checked;
                     localStorage.setItem('classic', String(this.classic))
                 }}
@@ -251,7 +262,7 @@ export const Tec1App = withProps({
                 min="0"
                 max="99"
                 value=${this.speed || "50"}
-                @change=${(event: { target: { value: string; }; }) => {
+                @change=${(event: any) => {
                     this.speed = event.target.value;
                     localStorage.setItem('speed', String(this.speed))
                     this.worker.postMessage({ type: 'SET_SPEED', value: this.speed });
@@ -273,7 +284,6 @@ export const Tec1App = withProps({
         </div>
     </div>
 </div>
-<!-- <div is="instructions" style="margin-left: 35px"></div> -->
 `;
     },
 });
