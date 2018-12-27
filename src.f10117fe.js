@@ -3503,14 +3503,11 @@ exports.Tec1App = util_1.withProps({
         let memMap = new nrf_intel_hex_1.default();
         let bytes = new Uint8Array(buffer);
         memMap.set(from, bytes);
-        let value = memMap.asHexString();
-        const url = URL.createObjectURL(new Blob([value], {
+        anchor.download = `TEC-1-${new Date().getTime()}.hex`;
+        let hexString = memMap.asHexString();
+        anchor.href = URL.createObjectURL(new Blob([hexString], {
           type: 'application/octet-stream'
         }));
-        var m = new Date();
-        var fileName = `TEC-1-${new Date().getTime()}.hex`;
-        anchor.download = fileName;
-        anchor.href = url;
         anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
         anchor.click();
       }
@@ -3612,11 +3609,18 @@ exports.Tec1App = util_1.withProps({
   },
 
   handleDownload() {
-    this.worker.postMessage({
-      type: 'READ_MEMORY',
-      from: 0,
-      size: 0x800
-    });
+    const pfrom = window.prompt('Start address (hex)', '0800');
+    const psize = window.prompt('Size (hex)', '1000');
+
+    if (pfrom != null && psize != null) {
+      const from = parseInt(pfrom, 16);
+      const size = parseInt(psize, 16);
+      this.worker.postMessage({
+        type: 'READ_MEMORY',
+        from,
+        size
+      });
+    }
   },
 
   postSpeed(speed) {
@@ -3715,7 +3719,6 @@ exports.Tec1App = util_1.withProps({
         </div>
     </div>
 </div>
-<!-- <div is="instructions" style="margin-left: 35px"></div> -->
 `;
   }
 
