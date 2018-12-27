@@ -2,13 +2,27 @@ import { html } from 'lit-html'
 import { withProps, isHidden, addVisibilityListener, removeVisiblityListener } from '../util';
 import tec1Image from '../../assets/TEC-1.jpg';
 import {audioInit, audioPlay, audioValue} from '../util/audio';
+// @ts-ignore: Module '"nrf-intel-hex"' has no default export
+import MemoryMap from 'nrf-intel-hex';
 
-interface AppRootProps {
-    digits: number[];
-    segments: number[];
-    display: number[];
-    shiftLocked: boolean;
+interface Message {
+    type: string;
 }
+
+interface MemoryMessage extends Message {
+    type: 'POST_MESSAGE';
+    from: number;
+    size: number;
+    buffer: ArrayBuffer;
+}
+
+interface CPUMessage extends Message {
+    type: 'POST_OUTPORTS';
+    buffer: ArrayBuffer;
+    display: ArrayBuffer;
+    wavelength: any;
+}
+
 
 interface KeyMap {
     [key: string]: number | null;
@@ -25,6 +39,15 @@ const keyMap:KeyMap = {
     ArrowDown: 0x11, ArrowUp: 0x10,
 };
 
+interface AppRootProps {
+    digits: number[];
+    segments: number[];
+    display: number[];
+    shiftLocked: boolean;
+}
+
+const anchor = document.createElement('a');
+
 export const Tec1App = withProps({
 
     init: function () {
@@ -40,15 +63,39 @@ export const Tec1App = withProps({
 
     onconnected() {
         this.worker = new Worker('../worker/worker.ts');
-        this.worker.onmessage = (event: { data: CPUMessage }) => {
-            let view = new Uint8Array(event.data.buffer);
-            this.digits = view[1];
-            this.segments = view[2];
-            this.requestRender();
-            this.display = [...new Uint8Array(event.data.display)];
-            this.wavelength = event.data.wavelength;
-            this.frequency = this.wavelength ? 500000/this.wavelength : 0;
-            audioValue(this.frequency);
+        this.worker.onmessage = (event: { data: CPUMessage | MemoryMessage }) => {
+            if (event.data.type === 'POST_OUTPORTS') {
+                const {
+                        buffer,
+                        display,
+                        wavelength,
+                } = event.data;
+                let view = new Uint8Array(buffer);
+                this.digits = view[1];
+                this.segments = view[2];
+                this.requestRender();
+                this.display = [...new Uint8Array(display)];
+                this.wavelength = wavelength;
+                this.frequency = this.wavelength ? 500000/this.wavelength : 0;
+                audioValue(this.frequency);
+            }
+            else {
+                const {
+                    from,
+                    buffer
+                } = event.data;
+                let memMap = new MemoryMap();
+                let bytes = new Uint8Array(buffer);
+                memMap.set(from, bytes);
+                let value = memMap.asHexString();
+                const url = URL.createObjectURL(new Blob([value], {type: 'application/octet-stream'}));
+                var m = new Date();
+                var fileName = `TEC-1-${(new Date).getTime()}.hex`;
+                anchor.download = fileName;
+                anchor.href = url;
+                anchor.dataset.downloadurl = ['text/plain', anchor.download, anchor.href].join(':');
+                anchor.click();
+            }
         }
         this.worker.postMessage({ type: 'INIT' });
         this.postSpeed(this.speed);
@@ -134,6 +181,10 @@ export const Tec1App = withProps({
         reader.readAsText(file);
     },
 
+    handleDownload() {
+        this.worker.postMessage({ type: 'READ_MEMORY', from: 0, size: 0x800 });
+    },
+
     postSpeed(speed: string) {
         this.worker.postMessage({ type: 'SET_SPEED', value: speed });
     },
@@ -157,13 +208,14 @@ export const Tec1App = withProps({
         </div>
         <div>
             <label for="rom-select">ROM</label>
-            <select id="rom-select" @change=${(event: { target: { value: string; }; }) => this.handleChangeROM(event.target.value)}>
+            <select id="rom-select" @change=${(event: any) => this.handleChangeROM(event.target.value)}>
                 <option>MON-1</option>
                 <option>MON-1A</option>
                 <option>MON-1B</option>
                 <option>MON-2</option>
             </select>
         </div>
+        <button @click=${() => this.handleDownload()}>Download</button>
     </div>
     <div id="tec1">
         ${  this.classic ?

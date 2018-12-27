@@ -4097,21 +4097,20 @@ var global = arguments[3];
 },{}],"src/worker/worker.ts":[function(require,module,exports) {
 "use strict";
 
-var __importStar = this && this.__importStar || function (mod) {
-  if (mod && mod.__esModule) return mod;
-  var result = {};
-  if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-  result["default"] = mod;
-  return result;
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
 };
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const z80_1 = require("./z80");
+const z80_1 = require("./z80"); // @ts-ignore: Module '"nrf-intel-hex"' has no default export
 
-const MemoryMap = __importStar(require("nrf-intel-hex"));
+
+const nrf_intel_hex_1 = __importDefault(require("nrf-intel-hex"));
 
 let running = false;
 let active = true;
@@ -4169,6 +4168,8 @@ self.onmessage = event => {
   } else if (event.data.type === 'UPDATE_MEMORY') {
     updateMemory(event.data.value);
     cpu.reset();
+  } else if (event.data.type === 'READ_MEMORY') {
+    readMemory(event.data.from, event.data.size);
   } else if (event.data.type === 'HIDDEN') {
     let hidden = event.data.value;
 
@@ -4272,12 +4273,12 @@ function postOutPorts(port, value) {
     buffer,
     display,
     speaker,
-    wavelength: wavelength
+    wavelength
   }, [buffer, display]);
 }
 
 function updateMemory(rom) {
-  const blocks = MemoryMap.fromHex(rom);
+  const blocks = nrf_intel_hex_1.default.fromHex(rom);
 
   for (let address of blocks.keys()) {
     const block = blocks.get(address);
@@ -4286,6 +4287,27 @@ function updateMemory(rom) {
       memory[i] = block[i];
     }
   }
+}
+
+function readMemory(from, size) {
+  from = 0x0000;
+  size = 0x800; // let memMap = new MemoryMap();
+
+  let buffer = new ArrayBuffer(size);
+  let bytes = new Uint8Array(buffer);
+
+  for (let i = 0; i < size; i++) {
+    bytes[i] = memory[i + from];
+  } // memMap.set(from, bytes);
+  // let value = memMap.asHexString();
+
+
+  self.postMessage({
+    type: 'POST_MEMORY',
+    from,
+    size,
+    buffer
+  }, [buffer]);
 }
 },{"./z80":"src/worker/z80.ts","nrf-intel-hex":"node_modules/nrf-intel-hex/intel-hex.browser.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -4314,7 +4336,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49981" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61630" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);

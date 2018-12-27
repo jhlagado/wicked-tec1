@@ -1,5 +1,6 @@
 import { Z80 } from './z80';
-import * as MemoryMap from 'nrf-intel-hex';
+// @ts-ignore: Module '"nrf-intel-hex"' has no default export
+import MemoryMap from 'nrf-intel-hex';
 
 let running = false;
 let active = true;
@@ -66,6 +67,9 @@ self.onmessage = event => {
     else if (event.data.type === 'UPDATE_MEMORY') {
         updateMemory(event.data.value);
         cpu.reset();
+    }
+    else if (event.data.type === 'READ_MEMORY') {
+        readMemory(event.data.from, event.data.size);
     }
     else if (event.data.type === 'HIDDEN') {
         let hidden = event.data.value;
@@ -159,7 +163,7 @@ function postOutPorts(port:number, value:number) {
         buffer,
         display,
         speaker,
-        wavelength: wavelength,
+        wavelength,
     // @ts-ignore: Type 'ArrayBuffer' is not assignable to type 'string' bug in type definition
     }, [buffer, display]);
 }
@@ -172,4 +176,24 @@ function updateMemory(rom:string) {
             memory[i] = block[i];
         }
     }
+}
+
+function readMemory(from:number, size:number) {
+    from = 0x0000;
+    size = 0x800;
+    // let memMap = new MemoryMap();
+    let buffer = new ArrayBuffer(size);
+    let bytes = new Uint8Array(buffer);
+    for (let i = 0; i < size; i++) {
+        bytes[i] = memory[i + from]
+    }
+    // memMap.set(from, bytes);
+    // let value = memMap.asHexString();
+    self.postMessage({
+        type: 'POST_MEMORY',
+        from,
+        size,
+        buffer,
+    // @ts-ignore: Type 'ArrayBuffer' is not assignable to type 'string' bug in type definition
+    }, [buffer]);
 }
