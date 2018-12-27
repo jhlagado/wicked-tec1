@@ -1,3 +1,4 @@
+
 import { Z80 } from './z80';
 // @ts-ignore: Module '"nrf-intel-hex"' has no default export
 import MemoryMap from 'nrf-intel-hex';
@@ -7,7 +8,8 @@ let active = true;
 let speed = 30;
 
 let cycles = 0;
-const memory = Array(0xFFFF).fill(0xFF);
+const buffer = new ArrayBuffer(0xFFFF)
+const memory = new Uint8Array(buffer).fill(0xFF);
 const inPorts = Array(256).fill(0xFF);
 const outPorts = Array(256).fill(0xFF);
 
@@ -24,6 +26,7 @@ const cpu = Z80({
         postOutPorts(port1, value);
     },
 });
+
 
 const display = Array(6).fill(0);
 
@@ -148,7 +151,8 @@ function postOutPorts(port:number, value:number) {
     const buffer = getPortsBuffer();
     const display = getDisplayBuffer();
 
-    if (port === 1 && (value === 0x7F || value === 0xFF)) {
+    // if (port === 1 && (value === 0x7F || value === 0xFF)) {
+    if (port === 1) {
         const speaker1 = value >> 7;
         if (speaker1 === 1 && speaker === 0) {
             wavelength = cycles;
