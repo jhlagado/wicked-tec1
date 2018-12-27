@@ -1,9 +1,20 @@
 import { html } from 'lit-html'
 import { withProps, isHidden, addVisibilityListener, removeVisiblityListener } from '../util';
-import tec1Image from '../assets/TEC-1.jpg';
+import tec1Image from '../../assets/TEC-1.jpg';
 import {audioInit, audioPlay, audioValue} from '../util/audio';
 
-const keyMap = {
+interface AppRootProps {
+    digits: number[];
+    segments: number[];
+    display: number[];
+    shiftLocked: boolean;
+}
+
+interface KeyMap {
+    [key: string]: number | null;
+}
+
+const keyMap:KeyMap = {
     Digit0: 0x00, Digit1: 0x01, Digit2: 0x02, Digit3: 0x03,
     Digit4: 0x04, Digit5: 0x05, Digit6: 0x06, Digit7: 0x07,
     Digit8: 0x08, Digit9: 0x09,
@@ -14,9 +25,9 @@ const keyMap = {
     ArrowDown: 0x11, ArrowUp: 0x10,
 };
 
-export const wickedTec1 = withProps({
+export const Tec1App = withProps({
 
-    init: function (event) {
+    init: function () {
         this.digits = 0;
         this.segments = 0;
         this.display = Array(6).fill(0);
@@ -27,9 +38,9 @@ export const wickedTec1 = withProps({
         this.shiftLocked = false;
     },
 
-    onconnected(event) {
+    onconnected() {
         this.worker = new Worker('../worker/worker.ts');
-        this.worker.onmessage = event => {
+        this.worker.onmessage = (event: { data: CPUMessage }) => {
             let view = new Uint8Array(event.data.buffer);
             this.digits = view[1];
             this.segments = view[2];
@@ -47,7 +58,7 @@ export const wickedTec1 = withProps({
         addVisibilityListener(this.handleVisibility);
     },
 
-    ondisconnected(event) {
+    ondisconnected() {
         this.worker.terminate();
         document.removeEventListener("keydown", this.handleKeyDown);
         removeVisiblityListener(this.handleVisibility);
@@ -59,7 +70,7 @@ export const wickedTec1 = withProps({
         this.worker.postMessage({ type: 'HIDDEN', value: isHidden() });
     },
 
-    handleKeyDown(event) {
+    handleKeyDown(event: KeyEvent) {
 
         if (this.handleButton(event.code, event.shiftKey, event.ctrlKey)) {
             event.preventDefault();
@@ -69,24 +80,26 @@ export const wickedTec1 = withProps({
         }
     },
 
-    handleButton(code, shiftKey, ctrlKey) {
+    handleButton(code:string, shiftKey:boolean) {
         audioInit();
         if (code === 'Escape') {
             this.worker.postMessage({ type: 'RESET' });
             return true;
         }
-        if (code === 'Space') {
+        else if (code === 'Space') {
             this.worker.postMessage({ type: 'PAUSE' });
             return true;
         }
-        if (code === 'ShiftLock') {
+        else if (code === 'ShiftLock') {
             this.shiftLocked = !this.shiftLocked;
             return true;
         }
         else if (code in keyMap) {
             let keyCode = keyMap[code];
+            if (keyCode == null)
+                return false;
             if (shiftKey) {
-                this.shiftLocked = true;;
+                this.shiftLocked = true;
             }
             const bit5 = 0b00100000;
             const keyCode1 = this.shiftLocked ?
@@ -97,9 +110,10 @@ export const wickedTec1 = withProps({
             this.worker.postMessage({ type: 'NMI' });
             return true;
         }
+        return false;
     },
 
-    handleChangeROM(name) {
+    handleChangeROM(name:string) {
         const p:Promise<{ROM:string}> =
             (name == 'MON-1A') ? import('../roms/MON-1A') :
             (name == 'MON-1B') ? import('../roms/MON-1B') :
@@ -110,7 +124,7 @@ export const wickedTec1 = withProps({
         );
     },
 
-    handleUpload(event) {
+    handleUpload(event: { target: { files: Array<Blob>; }; }) {
         const files = event.target.files;
         if (files == null || files.length === 0) return;
         const file = files[0];
@@ -120,17 +134,13 @@ export const wickedTec1 = withProps({
         reader.readAsText(file);
     },
 
-    postSpeed(speed) {
+    postSpeed(speed: string) {
         this.worker.postMessage({ type: 'SET_SPEED', value: speed });
     },
 
-    render({ digits, segments, display, shiftLocked }) {
+    render({ digits, segments, display, shiftLocked }:AppRootProps) {
         return html`
 <style>
-    body {
-        font-family: sans-serif;
-        font-size: 14px;
-    }
     #tec1 {
         width: 600px;
         height: 375px;
@@ -138,41 +148,16 @@ export const wickedTec1 = withProps({
         background-size: 100% 100%;
         position: relative;
     }
-
-    #digitPane {
-        direction: rtl;
-        padding: 0px 20px;
-        position: relative;
-        top: 74.4%;
-        right: 42.5%;
-    }
-
-    [is=key-button] {
-        position: absolute;
-        background-color: #cd3d45;
-        color: black;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: sans-serif;
-        font-size: 13px;
-        font-weight: bold;
-        width: 20px;
-        height: 20px;
-        border-radius: 10px;
-        left: 438px;
-        top: 301px;
-    }
 </style>
 <div style="display:inline-block">
     <div style="display:flex; justify-content:space-between; align-items: center; margin: 3px">
         <div>
-            HEX
-            <input type="file" accept=".hex" @change=${event => this.handleUpload(event)}>
+            <label for="file-upload">HEX</label>
+            <input id="file-upload" type="file" accept=".hex" @change=${(event: any) => this.handleUpload(event)}>
         </div>
         <div>
-            ROM
-            <select @change=${event => this.handleChangeROM(event.target.value)}>
+            <label for="rom-select">ROM</label>
+            <select id="rom-select" @change=${(event: { target: { value: string; }; }) => this.handleChangeROM(event.target.value)}>
                 <option>MON-1</option>
                 <option>MON-1A</option>
                 <option>MON-1B</option>
@@ -182,34 +167,39 @@ export const wickedTec1 = withProps({
     </div>
     <div id="tec1">
         ${  this.classic ?
-            html`<div is="keypad-classic" @click=${(event) => this.handleButton(event.detail.code)}></div>` :
-            html`<div is="keypad-modern" @click=${(event) => this.handleButton(event.detail.code)}></div>`
+            html`<div is="keypad-classic" @click=${(event: { detail: { code: string; }; }) => this.handleButton(event.detail.code)}></div>` :
+            html`<div is="keypad-modern" @click=${(event: { detail: { code: string; }; }) => this.handleButton(event.detail.code)}></div>`
         }
         <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
         <div is="key-button" .text=${ 'SH'}  .color=${ shiftLocked ? '#d8696f' : '#cd3d45'} .left=${386} .top=${333} @click=${() => this.handleButton('ShiftLock')}></div>
 
-        <div id="digitPane">
+        <div id="digit-pane">
             <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
         </div>
     </div>
     <div style="display:flex; justify-content:space-between; align-items: center; margin: 3px">
         <div>
-            <input type="checkbox"
+            <input
+                id="key-layout"
+                type="checkbox"
                 ?checked=${this.classic}
-                @change=${event => {
+                @change=${(event: { target: { checked: boolean; }; }) => {
                     this.classic = event.target.checked;
                     localStorage.setItem('classic', String(this.classic))
                 }}
-                >original key layout
+                >
+            <label for="key-layout">original key layout</label>
         </div>
         <div>
+            <label for="speed">Speed</label>
             Speed
             <input
+            id="speed"
                 type="range"
                 min="0"
                 max="99"
                 value=${this.speed || "50"}
-                @change=${event => {
+                @change=${(event: { target: { value: string; }; }) => {
                     this.speed = event.target.value;
                     localStorage.setItem('speed', String(this.speed))
                     this.worker.postMessage({ type: 'SET_SPEED', value: this.speed });

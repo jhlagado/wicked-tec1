@@ -3,13 +3,13 @@ let [hidden, visibilityChange] = (typeof (document as any).msHidden !== 'undefin
     ['webkitHidden', 'webkitvisibilitychange'] : ['hidden', 'visibilitychange'];
 
 export function isHidden() {
-  return document[hidden];
+  return (document as any)[hidden];
 }
 
-export function addVisibilityListener(func) {
+export function addVisibilityListener(func: EventListenerOrEventListenerObject) {
   document.addEventListener(visibilityChange, func, false);
 }
 
-export function removeVisiblityListener(func) {
+export function removeVisiblityListener(func: EventListenerOrEventListenerObject) {
   document.removeEventListener(visibilityChange, func, false);
 }

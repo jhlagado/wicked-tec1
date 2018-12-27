@@ -27,7 +27,64 @@
 /// We'll begin with the object constructor and the public API functions.
 ///////////////////////////////////////////////////////////////////////////////
 
-export function Z80(coreParameter) {
+interface CoreParameter {
+    mem_read: (addr: number) => any;
+    mem_write: (addr: number, value: number) => number;
+    io_read: (port: number) => any;
+    io_write: (port: number, value: number) => void;
+}
+
+interface Z80State {
+    b:number;
+    a:number;
+    c:number;
+    d:number;
+    e:number;
+    h:number;
+    l:number;
+    a_prime:number;
+    b_prime:number;
+    c_prime:number;
+    d_prime:number;
+    e_prime:number;
+    h_prime:number;
+    l_prime:number;
+    ix:number;
+    iy:number;
+    i:number;
+    r:number;
+    sp:number;
+    pc:number;
+    flags: {
+        S:number;
+        Z:number;
+        Y:number;
+        H:number;
+        X:number;
+        P:number;
+        N:number;
+        C:number;
+    }
+    flags_prime: {
+        S:number;
+        Z:number;
+        Y:number;
+        H:number;
+        X:number;
+        P:number;
+        N:number;
+        C:number;
+    }
+    imode: number;
+    iff1: number;
+    iff2: number;
+    halted: boolean;
+    do_delayed_di: boolean;
+    do_delayed_ei: boolean;
+    cycle_counter: number;
+}
+
+export function Z80(coreParameter: CoreParameter) {
     // Obviously we'll be needing the core object's functions again.
     let core = coreParameter;
 
@@ -90,7 +147,7 @@ export function Z80(coreParameter) {
     //  including processing any prefixes and handling interrupts.
     let cycle_counter = 0;
 
-    function getState() {
+    function getState():Z80State {
         return {
             b: b,
             a: a,
@@ -142,7 +199,7 @@ export function Z80(coreParameter) {
         };
     }
 
-    function setState(state) {
+    function setState(state:Z80State) {
         b = state.b;
         a = state.a;
         c = state.c;
@@ -292,7 +349,7 @@ export function Z80(coreParameter) {
     /// @param non_maskable - true if this is a non-maskable interrupt
     /// @param data - the value to be placed on the data bus, if needed
     ///////////////////////////////////////////////////////////////////////////////
-    let interrupt = function (non_maskable, data) {
+    let interrupt = function (non_maskable:boolean, data:number) {
         if (non_maskable) {
             // The high bit of R is not affected by this increment,
             //  it can only be changed using the LD R, A instruction.
@@ -349,12 +406,12 @@ export function Z80(coreParameter) {
     ///
     /// What begins here are just general utility functions, used variously.
     ///////////////////////////////////////////////////////////////////////////////
-    let decode_instruction = function (opcode) {
+    let decode_instruction = function (opcode:number) {
         // The register-to-register loads and ALU instructions
         //  are all so uniform that we can decode them directly
         //  instead of going into the instruction array for them.
         // This function gets the operand for all of these instructions.
-        var get_operand = function (opcode) {
+        var get_operand = function (opcode:number) {
             return ((opcode & 0x07) === 0) ? b :
                 ((opcode & 0x07) === 1) ? c :
                     ((opcode & 0x07) === 2) ? d :
@@ -415,7 +472,7 @@ export function Z80(coreParameter) {
         cycle_counter += cycle_counts[opcode];
     };
 
-    let get_signed_offset_byte = function (value) {
+    let get_signed_offset_byte = function (value:number) {
         // This function requires some explanation.
         // We just use JavaScript Number variables for our registers,
         //  not like a typed array or anything.
@@ -465,7 +522,7 @@ export function Z80(coreParameter) {
             (flags_prime.C);
     };
 
-    let set_flags_register = function (operand) {
+    let set_flags_register = function (operand:number) {
         // We need to set the F register, probably for a POP AF,
         //  so break out the given value into our separate flags.
         flags.S = (operand & 0x80) >>> 7;
@@ -478,7 +535,7 @@ export function Z80(coreParameter) {
         flags.C = (operand & 0x01);
     };
 
-    let set_flags_prime = function (operand) {
+    let set_flags_prime = function (operand:number) {
         // Again, this is the same as the above for F'.
         flags_prime.S = (operand & 0x80) >>> 7;
         flags_prime.Z = (operand & 0x40) >>> 6;
@@ -490,7 +547,7 @@ export function Z80(coreParameter) {
         flags_prime.C = (operand & 0x01);
     };
 
-    let update_xy_flags = function (result) {
+    let update_xy_flags = function (result:number) {
         // Most of the time, the undocumented flags
         //  (sometimes called X and Y, or 3 and 5),
         //  take their values from the corresponding bits
@@ -501,7 +558,7 @@ export function Z80(coreParameter) {
         flags.X = (result & 0x08) >>> 3;
     };
 
-    let get_parity = function (value) {
+    let get_parity = function (value:number) {
         // We could try to actually calculate the parity every time,
         //  but why calculate what you can pre-calculate?
         var parity_bits = [
@@ -525,7 +582,7 @@ export function Z80(coreParameter) {
         return parity_bits[value];
     };
 
-    let push_word = function (operand) {
+    let push_word = function (operand:number) {
         // Pretty obvious what this function does; given a 16-bit value,
         //  decrement the stack pointer, write the high byte to the new
         //  stack pointer location, then repeat for the low byte.
@@ -551,7 +608,7 @@ export function Z80(coreParameter) {
     ///  utility function that handles all variations of that instruction.
     /// Those utility functions begin here.
     ///////////////////////////////////////////////////////////////////////////////
-    let do_conditional_absolute_jump = function (condition) {
+    let do_conditional_absolute_jump = function (condition:boolean) {
         // This function implements the JP [condition],nn instructions.
         if (condition) {
             // We're taking this jump, so write the new PC,
@@ -569,7 +626,7 @@ export function Z80(coreParameter) {
         }
     };
 
-    let do_conditional_relative_jump = function (condition) {
+    let do_conditional_relative_jump = function (condition:boolean) {
         // This function implements the JR [condition],n instructions.
         if (condition) {
             // We need a few more cycles to actually take the jump.
@@ -585,7 +642,7 @@ export function Z80(coreParameter) {
         }
     };
 
-    let do_conditional_call = function (condition) {
+    let do_conditional_call = function (condition:boolean) {
         // This function is the CALL [condition],nn instructions.
         // If you've seen the previous functions, you know this drill.
         if (condition) {
@@ -600,20 +657,20 @@ export function Z80(coreParameter) {
         }
     };
 
-    let do_conditional_return = function (condition) {
+    let do_conditional_return = function (condition:boolean) {
         if (condition) {
             cycle_counter += 6;
             pc = (pop_word() - 1) & 0xffff;
         }
     };
 
-    let do_reset = function (address) {
+    let do_reset = function (address:number) {
         // The RST [address] instructions go through here.
         push_word((pc + 1) & 0xffff);
         pc = (address - 1) & 0xffff;
     };
 
-    let do_add = function (operand) {
+    let do_add = function (operand:number) {
         // This is the ADD A, [operand] instructions.
         // We'll do the literal addition, which includes any overflow,
         //  so that we can more easily figure out whether we had
@@ -635,7 +692,7 @@ export function Z80(coreParameter) {
         update_xy_flags(a);
     };
 
-    let do_adc = function (operand) {
+    let do_adc = function (operand:number) {
         var result = a + operand + flags.C;
 
         flags.S = (result & 0x80) ? 1 : 0;
@@ -649,7 +706,7 @@ export function Z80(coreParameter) {
         update_xy_flags(a);
     };
 
-    let do_sub = function (operand) {
+    let do_sub = function (operand:number) {
         var result = a - operand;
 
         flags.S = (result & 0x80) ? 1 : 0;
@@ -663,7 +720,7 @@ export function Z80(coreParameter) {
         update_xy_flags(a);
     };
 
-    let do_sbc = function (operand) {
+    let do_sbc = function (operand:number) {
         var result = a - operand - flags.C;
 
         flags.S = (result & 0x80) ? 1 : 0;
@@ -677,7 +734,7 @@ export function Z80(coreParameter) {
         update_xy_flags(a);
     };
 
-    let do_cp = function (operand) {
+    let do_cp = function (operand:number) {
         // A compare instruction is just a subtraction that doesn't save the value,
         //  so we implement it as... a subtraction that doesn't save the value.
         var temp = a;
@@ -688,7 +745,7 @@ export function Z80(coreParameter) {
         update_xy_flags(operand);
     };
 
-    let do_and = function (operand) {
+    let do_and = function (operand:number) {
         // The logic instructions are all pretty straightforward.
         a &= operand & 0xff;
         flags.S = (a & 0x80) ? 1 : 0;
@@ -700,7 +757,7 @@ export function Z80(coreParameter) {
         update_xy_flags(a);
     };
 
-    let do_or = function (operand) {
+    let do_or = function (operand:number) {
         a = (operand | a) & 0xff;
         flags.S = (a & 0x80) ? 1 : 0;
         flags.Z = !a ? 1 : 0;
@@ -711,7 +768,7 @@ export function Z80(coreParameter) {
         update_xy_flags(a);
     };
 
-    let do_xor = function (operand) {
+    let do_xor = function (operand:number) {
         a = (operand ^ a) & 0xff;
         flags.S = (a & 0x80) ? 1 : 0;
         flags.Z = !a ? 1 : 0;
@@ -722,7 +779,7 @@ export function Z80(coreParameter) {
         update_xy_flags(a);
     };
 
-    let do_inc = function (operand) {
+    let do_inc = function (operand:number) {
         var result = operand + 1;
 
         flags.S = (result & 0x80) ? 1 : 0;
@@ -738,7 +795,7 @@ export function Z80(coreParameter) {
         return result;
     };
 
-    let do_dec = function (operand) {
+    let do_dec = function (operand:number) {
         var result = operand - 1;
 
         flags.S = (result & 0x80) ? 1 : 0;
@@ -753,7 +810,7 @@ export function Z80(coreParameter) {
         return result;
     };
 
-    let do_hl_add = function (operand) {
+    let do_hl_add = function (operand:number) {
         // The HL arithmetic instructions are the same as the A ones,
         //  just with twice as many bits happening.
         var hl = l | (h << 8), result = hl + operand;
@@ -768,7 +825,7 @@ export function Z80(coreParameter) {
         update_xy_flags(h);
     };
 
-    let do_hl_adc = function (operand) {
+    let do_hl_adc = function (operand:number) {
         operand += flags.C;
         var hl = l | (h << 8), result = hl + operand;
 
@@ -785,7 +842,7 @@ export function Z80(coreParameter) {
         update_xy_flags(h);
     };
 
-    let do_hl_sbc = function (operand) {
+    let do_hl_sbc = function (operand:number) {
         operand += flags.C;
         var hl = l | (h << 8), result = hl - operand;
 
@@ -802,7 +859,7 @@ export function Z80(coreParameter) {
         update_xy_flags(h);
     };
 
-    let do_in = function (port) {
+    let do_in = function (port:number) {
         var result = core.io_read(port);
 
         flags.S = (result & 0x80) ? 1 : 0;
@@ -960,7 +1017,7 @@ export function Z80(coreParameter) {
         flags.N = 1;
     };
 
-    let do_rlc = function (operand) {
+    let do_rlc = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -975,7 +1032,7 @@ export function Z80(coreParameter) {
         return operand;
     };
 
-    let do_rrc = function (operand) {
+    let do_rrc = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -990,7 +1047,7 @@ export function Z80(coreParameter) {
         return operand & 0xff;
     };
 
-    let do_rl = function (operand) {
+    let do_rl = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -1006,7 +1063,7 @@ export function Z80(coreParameter) {
         return operand;
     };
 
-    let do_rr = function (operand) {
+    let do_rr = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -1022,7 +1079,7 @@ export function Z80(coreParameter) {
         return operand;
     };
 
-    let do_sla = function (operand) {
+    let do_sla = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -1037,7 +1094,7 @@ export function Z80(coreParameter) {
         return operand;
     };
 
-    let do_sra = function (operand) {
+    let do_sra = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -1052,7 +1109,7 @@ export function Z80(coreParameter) {
         return operand;
     };
 
-    let do_sll = function (operand) {
+    let do_sll = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -1067,7 +1124,7 @@ export function Z80(coreParameter) {
         return operand;
     };
 
-    let do_srl = function (operand) {
+    let do_srl = function (operand:number) {
         flags.N = 0;
         flags.H = 0;
 
@@ -1082,7 +1139,7 @@ export function Z80(coreParameter) {
         return operand;
     };
 
-    let do_ix_add = function (operand) {
+    let do_ix_add = function (operand:number) {
         flags.N = 0;
 
         var result = ix + operand;
@@ -1101,7 +1158,7 @@ export function Z80(coreParameter) {
     ///  register loads and the accumulator ALU instructions, in other words).
     /// Similar tables for the ED and DD/FD prefixes follow this one.
     ///////////////////////////////////////////////////////////////////////////////
-    let instructions = [];
+    let instructions:any[] = [];
 
     // 0x00 : NOP
     instructions[0x00] = function () { };
@@ -1980,7 +2037,7 @@ export function Z80(coreParameter) {
     ///  there are not very many valid ED-prefixed opcodes in the Z80,
     ///  and many of the ones that are valid are not documented.
     ///////////////////////////////////////////////////////////////////////////////
-    let ed_instructions = [];
+    let ed_instructions:any[] = [];
     // 0x40 : IN B, (C)
     ed_instructions[0x40] = function () {
         b = do_in((b << 8) | c);
@@ -2416,7 +2473,7 @@ export function Z80(coreParameter) {
     /// The undocumented instructions here are those that deal with only one byte
     ///  of the two-byte IX register; the bytes are designed IXH and IXL here.
     ///////////////////////////////////////////////////////////////////////////////
-    let dd_instructions = [];
+    let dd_instructions: (() => void)[] = [];
     // 0x09 : ADD IX, BC
     dd_instructions[0x09] = function () {
         do_ix_add(c | (b << 8));
@@ -2823,8 +2880,8 @@ export function Z80(coreParameter) {
 
             // Most of the opcodes in this range are not valid,
             //  so we map this opcode onto one of the ones that is.
-            var func = ddcb_functions[(opcode & 0x38) >>> 3],
-                value = func(core.mem_read((ix + offset) & 0xffff));
+            var func = ddcb_functions[(opcode & 0x38) >>> 3];
+            value = func(core.mem_read((ix + offset) & 0xffff));
 
             core.mem_write((ix + offset) & 0xffff, value);
         }

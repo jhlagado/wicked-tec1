@@ -1,7 +1,4 @@
-import * as we from 'wicked-elements';
-const {default: wickedElements} = we;
-
-import { wickedTec1 } from './components/wicked-tec1';
+import { Tec1App } from './components/app-root';
 import { sevenSegDisplay } from './components/seven-seg-display';
 import { sevenSeg } from './components/seven-seg';
 import { instructions } from './components/instructions';
@@ -9,8 +6,11 @@ import { keyButton } from './components/key-button';
 import { keyPadClassic } from './components/keypad-classic';
 import { keyPadModern } from './components/keypad-modern';
 
+import * as we  from 'wicked-elements';
+const wickedElements = (we as any).default;
+
 export function initApp() {
-    wickedElements.define('[is="wicked-tec1"]', wickedTec1);
+    wickedElements.define('[is="app-root"]', Tec1App);
     wickedElements.define('[is="seven-seg-display"]', sevenSegDisplay);
     wickedElements.define('[is="seven-seg"]', sevenSeg);
     wickedElements.define('[is="instructions"]', instructions);

@@ -2,7 +2,7 @@ import { html } from 'lit-html'
 import { withProps } from '../util';
 export const keyPadModern = withProps({
 
-    handleButton(code) {
+    handleButton(code:string) {
         const event = new CustomEvent('click', {
             detail: {
                 code: code,

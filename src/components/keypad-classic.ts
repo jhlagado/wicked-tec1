@@ -3,7 +3,7 @@ import { withProps } from '../util';
 
 export const keyPadClassic = withProps({
 
-    handleButton(code) {
+    handleButton(code:string) {
         const event = new CustomEvent('click', {
             detail: {
                 code: code,

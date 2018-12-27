@@ -1,9 +1,13 @@
 import { html } from 'lit-html'
 import { withProps } from '../util';
 
+interface SevenSegDisplayProps {
+    display: number[];
+}
+
 export const sevenSegDisplay = withProps({
 
-    init(event) {
+    init() {
         this.display0 = Array(6).fill(0);
         this.display = [...this.display0];
         this.blanks = 0
@@ -13,9 +17,9 @@ export const sevenSegDisplay = withProps({
         return ['digits', 'segments', 'display'];
     },
 
-    render({ digits, segments, display }) {
+    render({ display }:SevenSegDisplayProps) {
         return html`
-<div style="white-space: nowrap;">${display.map((segs, index) => html`
+<div style="white-space: nowrap;">${display.map((segs:number, index:number) => html`
 <span is="seven-seg" style=${index == 1 ? 'margin-left:2.2%' : ''} .segments=${segs}>
 </div>`)}</span>
 `;

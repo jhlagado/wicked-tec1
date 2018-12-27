@@ -1,6 +1,7 @@
 import {html, render} from 'lit-html';
+import { BaseComponent } from './types';
 
-export function debounceRender(object) {
+export function debounceRender(object:BaseComponent) {
   let requested = false;
   const renderFunc = () => {
     requested = false;

@@ -2,8 +2,8 @@ var AudioContext = (window as any).AudioContext // Default
     || (window as any).webkitAudioContext // Safari and old versions of Chrome
     || false;
 
-let audioCtx;
-let source1;
+let audioCtx: AudioContext;
+let source1: OscillatorNode;
 let active = false;
 
 function init() {
@@ -16,9 +16,9 @@ function init() {
     source1.start();
 }
 
-export function audioValue(value) {
+export function audioValue(value: number) {
     if (value != null && active) {
-        source1.frequency.setValueAtTime(value, audioCtx.currentTime);
+        source1.frequency.value = value;
     }
 }
 
@@ -33,7 +33,7 @@ export function audioInit() {
     active = true;
 }
 
-export function audioPlay(state) {
+export function audioPlay(state: boolean) {
     if (!audioCtx) {
         init();
     }

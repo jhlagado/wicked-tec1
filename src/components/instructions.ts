@@ -3,7 +3,7 @@ import { withProps } from '../util';
 
 export const instructions = withProps({
 
-    render({ segments }) {
+    render() {
         return html`
         <h1>TEC-1</h1>
         <table style="width: 600px">

@@ -1,10 +1,11 @@
 import { debounceRender } from './debounce-render';
+import { BaseComponent } from './types';
 
-export function withProps(def) {
+export function withProps(def:any) {
 
   const def2 = Object.create(def);
   const oldInit = def2.init;
-  def2.init = function (event) {
+  def2.init = function (event: { currentTarget: any; }) {
 
     this.element = event.currentTarget;
     this.requestRender = debounceRender(this);
@@ -20,7 +21,7 @@ export function withProps(def) {
   return def2;
 };
 
-function observeProperties(object) {
+function observeProperties(object:BaseComponent) {
 
   const props = object.observedProperties;
   if (!props || !props.length) {

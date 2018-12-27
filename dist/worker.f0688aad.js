@@ -132,9 +132,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
 Object.defineProperty(exports, "__esModule", {
   value: true
-}); ///////////////////////////////////////////////////////////////////////////////
-/// We'll begin with the object constructor and the public API functions.
-///////////////////////////////////////////////////////////////////////////////
+});
 
 function Z80(coreParameter) {
   // Obviously we'll be needing the core object's functions again.
@@ -2997,8 +2995,8 @@ function Z80(coreParameter) {
       var ddcb_functions = [do_rlc, do_rrc, do_rl, do_rr, do_sla, do_sra, do_sll, do_srl]; // Most of the opcodes in this range are not valid,
       //  so we map this opcode onto one of the ones that is.
 
-      var func = ddcb_functions[(opcode & 0x38) >>> 3],
-          value = func(core.mem_read(ix + offset & 0xffff));
+      var func = ddcb_functions[(opcode & 0x38) >>> 3];
+      value = func(core.mem_read(ix + offset & 0xffff));
       core.mem_write(ix + offset & 0xffff, value);
     } else {
       var bit_number = (opcode & 0x38) >>> 3;
@@ -4099,10 +4097,12 @@ var global = arguments[3];
 },{}],"src/worker/worker.ts":[function(require,module,exports) {
 "use strict";
 
-var __importDefault = this && this.__importDefault || function (mod) {
-  return mod && mod.__esModule ? mod : {
-    "default": mod
-  };
+var __importStar = this && this.__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+  result["default"] = mod;
+  return result;
 };
 
 Object.defineProperty(exports, "__esModule", {
@@ -4111,7 +4111,7 @@ Object.defineProperty(exports, "__esModule", {
 
 const z80_1 = require("./z80");
 
-const nrf_intel_hex_1 = __importDefault(require("nrf-intel-hex"));
+const MemoryMap = __importStar(require("nrf-intel-hex"));
 
 let running = false;
 let active = true;
@@ -4277,7 +4277,7 @@ function postOutPorts(port, value) {
 }
 
 function updateMemory(rom) {
-  const blocks = nrf_intel_hex_1.default.fromHex(rom);
+  const blocks = MemoryMap.fromHex(rom);
 
   for (let address of blocks.keys()) {
     const block = blocks.get(address);
@@ -4314,7 +4314,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "65301" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49981" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);

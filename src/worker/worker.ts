@@ -1,5 +1,5 @@
 import { Z80 } from './z80';
-import MemoryMap from 'nrf-intel-hex';
+import * as MemoryMap from 'nrf-intel-hex';
 
 let running = false;
 let active = true;
@@ -11,12 +11,12 @@ const inPorts = Array(256).fill(0xFF);
 const outPorts = Array(256).fill(0xFF);
 
 const cpu = Z80({
-    mem_read: (addr) => memory[addr],
-    mem_write: (addr, value) => memory[addr] = value,
-    io_read: (port) => {
+    mem_read: (addr:number) => memory[addr],
+    mem_write: (addr:number, value:number) => memory[addr] = value,
+    io_read: (port:number) => {
         return inPorts[port & 0xFF];
     },
-    io_write: (port, value) => {
+    io_write: (port:number, value:number) => {
         const port1 = port & 0xFF;
         outPorts[port1] = value;
         updateDisplay();
@@ -140,7 +140,7 @@ function getDisplayBuffer(){
 
 let speaker = 1;
 let wavelength = 0;
-function postOutPorts(port, value) {
+function postOutPorts(port:number, value:number) {
     const buffer = getPortsBuffer();
     const display = getDisplayBuffer();
 
@@ -160,10 +160,11 @@ function postOutPorts(port, value) {
         display,
         speaker,
         wavelength: wavelength,
+    // @ts-ignore: Type 'ArrayBuffer' is not assignable to type 'string' bug in type definition
     }, [buffer, display]);
 }
 
-function updateMemory(rom) {
+function updateMemory(rom:string) {
     const blocks = MemoryMap.fromHex(rom);
     for (let address of blocks.keys()) {
         const block = blocks.get(address);
