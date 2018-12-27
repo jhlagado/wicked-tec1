@@ -217,15 +217,6 @@ export const Tec1App = withProps({
             <label for="file-upload">HEX</label>
             <input id="file-upload" type="file" accept=".hex" @change=${(event: any) => this.handleUpload(event)}>
         </div>
-        <div>
-            <label for="rom-select">ROM</label>
-            <select id="rom-select" @change=${(event: any) => this.handleChangeROM(event.target.value)}>
-                <option>MON-1</option>
-                <option>MON-1A</option>
-                <option>MON-1B</option>
-                <option>MON-2</option>
-            </select>
-        </div>
         <button @click=${() => this.handleDownload()}>Download</button>
     </div>
     <div id="tec1">
@@ -241,6 +232,15 @@ export const Tec1App = withProps({
         </div>
     </div>
     <div style="display:flex; justify-content:space-between; align-items: center; margin: 3px">
+        <div>
+            <label for="rom-select">ROM</label>
+            <select id="rom-select" @change=${(event: any) => this.handleChangeROM(event.target.value)}>
+                <option>MON-1</option>
+                <option>MON-1A</option>
+                <option>MON-1B</option>
+                <option>MON-2</option>
+            </select>
+        </div>
         <div>
             <input
                 id="key-layout"

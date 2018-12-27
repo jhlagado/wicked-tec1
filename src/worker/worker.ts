@@ -172,8 +172,8 @@ function updateMemory(rom:string) {
     const blocks = MemoryMap.fromHex(rom);
     for (let address of blocks.keys()) {
         const block = blocks.get(address);
-        for (let i = address; i < address + block.length; i++) {
-            memory[i] = block[i];
+        for (let i = 0; i < block.length; i++) {
+            memory[i + address] = block[i];
         }
     }
 }
