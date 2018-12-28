@@ -38,14 +38,6 @@ const keyMap:KeyMap = {
     ArrowDown: 0x11, ArrowUp: 0x10,
 };
 
-interface KeyEvent {
-    code: any;
-    shiftKey: any;
-    ctrlKey: any;
-    preventDefault: () => void;
-    key: any;
-}
-
 interface AppRootProps {
     digits: number[];
     segments: number[];
@@ -89,7 +81,7 @@ export const Tec1App = withProps({
             else {
                 const {
                     from,
-                    buffer
+                    buffer,
                 } = event.data;
                 let memMap = new MemoryMap();
                 let bytes = new Uint8Array(buffer);
@@ -107,12 +99,14 @@ export const Tec1App = withProps({
         this.handleChangeROM('MON-1');
 
         document.addEventListener("keydown", this.handleKeyDown);
+        document.addEventListener("keyup", this.handleKeyUp);
         addVisibilityListener(this.handleVisibility);
     },
 
     ondisconnected() {
         this.worker.terminate();
         document.removeEventListener("keydown", this.handleKeyDown);
+        document.removeEventListener("keyup", this.handleKeyDown);
         removeVisiblityListener(this.handleVisibility);
     },
 
@@ -122,9 +116,9 @@ export const Tec1App = withProps({
         this.worker.postMessage({ type: 'HIDDEN', value: isHidden() });
     },
 
-    handleKeyDown(event: KeyEvent) {
+    handleKeyDown(event: any) {
 
-        if (this.handleButton(event.code, event.shiftKey, event.ctrlKey)) {
+        if (this.handleCode(event.code, event.shiftKey)) {
             event.preventDefault();
         }
         else {
@@ -132,18 +126,24 @@ export const Tec1App = withProps({
         }
     },
 
-    handleButton(code:string, shiftKey:boolean) {
+    handleButton(event: any) {
+        // console.log(event.detail)
+        const {code, eventType} = event.detail;
+        const pressed = eventType === 'mousedown';
+        if (this.handleCode(code, pressed, event.shiftKey)) {
+            event.preventDefault();
+        }
+    },
+
+    handleCode(code:string, pressed:boolean, shiftKey:boolean) {
         audioInit();
+        pressed;
         if (code === 'Escape') {
             this.worker.postMessage({ type: 'RESET' });
             return true;
         }
-        else if (code === 'Space') {
-            this.worker.postMessage({ type: 'PAUSE' });
-            return true;
-        }
         else if (code === 'ShiftLock') {
-            this.shiftLocked = !this.shiftLocked;
+            if (pressed) this.shiftLocked = !this.shiftLocked;
             return true;
         }
         else if (code in keyMap) {
@@ -154,12 +154,13 @@ export const Tec1App = withProps({
                 this.shiftLocked = true;
             }
             const bit5 = 0b00100000;
-            const keyCode1 = this.shiftLocked ?
-                keyCode & ~bit5 :
-                keyCode | bit5;
+            const mask = ~bit5;
+            let keyCode1 = keyCode & mask;
+            if (!this.shiftLocked) keyCode1 = keyCode1 | bit5;
             this.shiftLocked = false;
             this.worker.postMessage({ type: 'SET_INPUT_VALUE', port: 0, value: keyCode1 });
-            this.worker.postMessage({ type: 'NMI' });
+            this.worker.postMessage({ type: 'SET_KEY_VALUE', code: keyCode1, pressed });
+            if (pressed) this.worker.postMessage({ type: 'NMI' });
             return true;
         }
         return false;
@@ -170,6 +171,7 @@ export const Tec1App = withProps({
             (name == 'MON-1A') ? import('../roms/MON-1A') :
             (name == 'MON-1B') ? import('../roms/MON-1B') :
             (name == 'MON-2') ? import('../roms/MON-2') :
+            (name == 'JMON') ? import('../roms/JMON') :
             import('../roms/MON-1');
         p.then((result) =>
             this.worker.postMessage({ type: 'UPDATE_MEMORY', value: result.ROM })
@@ -221,11 +223,28 @@ export const Tec1App = withProps({
     </div>
     <div id="tec1">
         ${  this.classic ?
-            html`<div is="keypad-classic" @click=${(event: any) => this.handleButton(event.detail.code)}></div>` :
-            html`<div is="keypad-modern" @click=${(event: any) => this.handleButton(event.detail.code)}></div>`
+            html`<div is="keypad-classic" @button=${(event: any) => this.handleButton(event)}></div>` :
+            html`<div is="keypad-modern" @button=${(event: any) => this.handleButton(event)}></div>`
         }
-        <div is="key-button" .text=${ 'R'}  .color=${ '#cd3d45'} .left=${349} .top=${301} @click=${() => this.handleButton('Escape')}></div>
-        <div is="key-button" .text=${ 'SH'}  .color=${ shiftLocked ? '#d8696f' : '#cd3d45'} .left=${386} .top=${333} @click=${() => this.handleButton('ShiftLock')}></div>
+        <div
+            is="key-button"
+            .code=${'Escape'}
+            .text=${'R'}
+            .color=${'#cd3d45'}
+            .left=${349}
+            .top=${301}
+            @button=${(event: any) => this.handleButton(event)}>
+        </div>
+
+        <div
+            is="key-button"
+            .code=${'ShiftLock'}
+            .text=${'SH'}
+            .color=${ shiftLocked ? '#d8696f' : '#cd3d45'}
+            .left=${386}
+            .top=${333}
+            @button=${(event: any) => this.handleButton(event)}>
+        </div>
 
         <div id="digit-pane">
             <div id="seven" is="seven-seg-display" .digits=${digits} .segments=${segments} .display=${display}></div>
@@ -239,6 +258,7 @@ export const Tec1App = withProps({
                 <option>MON-1A</option>
                 <option>MON-1B</option>
                 <option>MON-2</option>
+                <option>JMON</option>
             </select>
         </div>
         <div>

@@ -60,6 +60,13 @@ self.onmessage = event => {
         const { port, value } = event.data;
         inPorts[port] = value;
     }
+    else if (event.data.type === 'SET_KEY_VALUE') {
+        const { code, pressed } = event.data;
+        inPorts[0] = code;
+        const bit6 = 0b01000000;
+        const bit6mask = ~bit6;
+        inPorts[3] = inPorts[3] & bit6mask | (!pressed ? bit6 : 0);
+    }
     else if (event.data.type === 'SET_SPEED') {
         speed = Number(event.data.value)/100;
         console.log('set speed', speed);
@@ -91,9 +98,19 @@ self.onmessage = event => {
 
 function* runGen () {
     while (true){
-        for (let i = 0; i < 1000 ; i++) {
-            const count = cpu.run_instruction();
-            cycles += count;
+        for (let i = 0; i < 1000; i++) {
+            try {
+                const count = cpu.run_instruction();
+                cycles += count;
+            }
+            catch(e) {
+                const pc = cpu.getPC();
+                const mem = memory[cpu.getPC()] || 0;
+                    console.log(`Illegal operation at ${
+                    pc.toString(16)}: ${mem.toString(16)
+                }`);
+                cpu.reset();
+            }
         }
         yield cycles;
     }
@@ -151,7 +168,6 @@ function postOutPorts(port:number, value:number) {
     const buffer = getPortsBuffer();
     const display = getDisplayBuffer();
 
-    // if (port === 1 && (value === 0x7F || value === 0xFF)) {
     if (port === 1) {
         const speaker1 = value >> 7;
         if (speaker1 === 1 && speaker === 0) {
@@ -168,6 +184,7 @@ function postOutPorts(port:number, value:number) {
         display,
         speaker,
         wavelength,
+        pc: cpu.getPC(),
     // @ts-ignore: Type 'ArrayBuffer' is not assignable to type 'string' bug in type definition
     }, [buffer, display]);
 }

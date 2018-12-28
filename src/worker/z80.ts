@@ -199,6 +199,10 @@ export function Z80(coreParameter: CoreParameter) {
         };
     }
 
+    function getPC() {
+        return pc;
+    }
+
     function setState(state:Z80State) {
         b = state.b;
         a = state.a;
@@ -309,13 +313,7 @@ export function Z80(coreParameter: CoreParameter) {
 
             // Read the byte at the PC and run the instruction it encodes.
             var opcode = core.mem_read(pc);
-            try {
-                decode_instruction(opcode);
-            }
-            catch (e) {
-                console.log(`Illegal opcode ${opcode} at ${pc}`, e);
-                halted = true;
-            }
+            decode_instruction(opcode);
             pc = (pc + 1) & 0xffff;
 
             // Actually do the delayed interrupt disable/enable if we have one.
@@ -3042,6 +3040,7 @@ export function Z80(coreParameter: CoreParameter) {
     //  but only these three functions are the public API.
     return {
         getState,
+        getPC,
         setState,
         reset,
         reset1,
