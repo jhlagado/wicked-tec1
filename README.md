@@ -11,6 +11,7 @@ There have been a couple of emulations of the TEC-1 over the years. I wondered w
 a good enough one could be written in JavaScript and run directly in a browser. It turns out
 that, yes, you most certainly can. You can see the result of my experimentation, a live working version of the TEC-1 [running right here](https://jhlagado.github.io/wicked-tec1)
 
+
 ### Resources
 - [An annotated disassembly of the TEC-1 ROMS](https://github.com/jhlagado/TEC-1)
 - [Introducing the TEC-1 early 1983](http://www.talkingelectronics.com/TE-1-15_pdfs/TE-Issue10.pdf)
