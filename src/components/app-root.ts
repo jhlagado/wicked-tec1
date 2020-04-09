@@ -291,7 +291,7 @@ export const Tec1App = withProps({
                 >
         </div>
     </div>
-    <p>MON 1 Restarts:</p>
+    <p>MON 1 Restart:</p>
     <div style="display:flex; justify-content:space-between">
         <div>
             <div>CF (RST 1)	INVADERS</div>
