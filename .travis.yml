@@ -18,7 +18,6 @@ notifications:
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
-
 deploy:
   provider: pages
   skip-cleanup: true
