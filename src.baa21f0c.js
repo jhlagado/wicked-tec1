@@ -124,7 +124,7 @@ var r,t=arguments[3];!function(t,e){"object"==typeof exports&&"undefined"!=typeo
                 >
         </div>
     </div>
-    <p>MON 1 Restarts:</p>
+    <p>MON 1 Restart:</p>
     <div style="display:flex; justify-content:space-between">
         <div>
             <div>CF (RST 1)	INVADERS</div>
@@ -244,4 +244,4 @@ var r,t=arguments[3];!function(t,e){"object"==typeof exports&&"undefined"!=typeo
 },{"./components/app-root":"iOS7","./components/seven-seg-display":"vk4e","./components/seven-seg":"FDzH","./components/key-button":"RLnz","./components/keypad-classic":"nqAn","./components/keypad-modern":"dShH","wicked-elements":"Lu2G"}],"B6dB":[function(require,module,exports) {
 "use strict";Object.defineProperty(exports,"__esModule",{value:!0});const e=require("./app");e.initApp();
 },{"./app":"YSF2"}]},{},["B6dB"], null)
-//# sourceMappingURL=src.3cea28eb.js.map
+//# sourceMappingURL=src.baa21f0c.js.map
