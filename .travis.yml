@@ -2,7 +2,7 @@ language: node_js
 node_js:
   - 'stable'
 script:
-  - yarn travis
+  - yarn test
 before_script:
   - npm prune
 install:
