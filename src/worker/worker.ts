@@ -1,215 +1,255 @@
-
-import { Z80 } from './z80';
-// @ts-ignore: Module '"nrf-intel-hex"' has no default export
 import MemoryMap from 'nrf-intel-hex';
+import { throttle } from '../util/tools';
+import { execute, reset, interrupt, init } from './z80';
+
+const sixtyfourK = 0x10000;
 
 let running = false;
-let active = true;
+const active = true;
 let speed = 30;
+let smooth = true;
 
 let cycles = 0;
-const buffer = new ArrayBuffer(0xFFFF)
-const memory = new Uint8Array(buffer).fill(0xFF);
-const inPorts = Array(256).fill(0xFF);
-const outPorts = Array(256).fill(0xFF);
-
-const cpu = Z80({
-    mem_read: (addr:number) => memory[addr],
-    mem_write: (addr:number, value:number) => memory[addr] = value,
-    io_read: (port:number) => {
-        return inPorts[port & 0xFF];
-    },
-    io_write: (port:number, value:number) => {
-        const port1 = port & 0xFF;
-        outPorts[port1] = value;
-        updateDisplay();
-        postOutPorts(port1, value);
-    },
-});
-
-
+const memory = new Uint8Array(new ArrayBuffer(sixtyfourK)).fill(0xff);
+const inPorts = Array(256).fill(0xff);
+const outPorts = Array(256).fill(0xff);
 const display = Array(6).fill(0);
+let speaker = 1;
+let wavelength = 0;
 
-self.onmessage = event => {
-    if (event.data.type === 'INIT') {
-        // updateMemory(ROM);
-        cpu.reset();
-        running = true;
-        run();
+const cpu = init();
+
+const postAllMemory = throttle(
+  () => {
+    const memMap = new MemoryMap();
+    const bytes = new Uint8Array(memory);
+    memMap.set(0, bytes);
+    const hexString = memMap.asHexString();
+
+    (self as any).postMessage({
+      type: 'POST_ALL_MEMORY',
+      memory: hexString,
+    });
+  },
+  5 * 1000,
+  true
+);
+
+const postDisplay = throttle(() => {
+  const displayBuffer = new ArrayBuffer(6);
+  const view = new Uint8Array(displayBuffer);
+  for (let i = 0; i < 6; i++) {
+    view[i] = display[i];
+  }
+  (self as any).postMessage(
+    {
+      type: 'POST_DISPLAY',
+      display: displayBuffer,
+    },
+    [displayBuffer]
+  );
+}, 100);
+
+function ioWrite(port: number, value: number) {
+  const port1 = port & 0xff;
+  outPorts[port1] = value;
+  const digits = outPorts[1];
+  const segments = outPorts[2];
+  let mask = 0x01;
+  for (let i = 0; i < 6; i++) {
+    if (digits & mask) {
+      display[i] = segments;
     }
-    else if (event.data.type === 'PAUSE') {
-        if (active) {
-            active = false;
-            running = false;
-        }
-        else {
-            active = true;
-            running = true;
-            run();
-        }
+    else if (!smooth) {
+      display[i] = 0;
     }
-    else if (event.data.type === 'RESUME') {
+    mask <<= 1;
+  }
+  let wavelengthChanged = false;
+  if (port1 === 1) {
+    const speaker1 = value >> 7;
+    if (speaker1 === 1 && speaker === 0) {
+      if (wavelength !== cycles) {
+        wavelengthChanged = true;
+      }
+      wavelength = cycles;
+      cycles = 0;
     }
-    else if (event.data.type === 'RESET') {
-        console.log('resetting');
-        cpu.reset();
-        running = true;
-        run();
+    speaker = speaker1;
+  }
+  if (cycles > 10000) {
+    if (wavelength !== 0) {
+      wavelengthChanged = true;
     }
-    else if (event.data.type === 'SET_INPUT_VALUE') {
-        const { port, value } = event.data;
-        inPorts[port] = value;
+    wavelength = 0;
+  }
+  if (wavelengthChanged) {
+    (self as any).postMessage(
+      {
+        type: 'POST_WAVELENGTH',
+        wavelength,
+      },
+      []
+    );
+  }
+  postDisplay();
+}
+
+const cb = {
+  mem_read: (addr: number) => memory[addr],
+  mem_write: (addr: number, value: number) => {
+    const oldValue = memory[addr];
+    memory[addr] = value;
+    if (oldValue !== value) {
+      postAllMemory();
     }
-    else if (event.data.type === 'SET_KEY_VALUE') {
-        const { code, pressed } = event.data;
-        inPorts[0] = code;
-        const bit6 = 0b01000000;
-        const bit6mask = ~bit6;
-        inPorts[3] = inPorts[3] & bit6mask | (!pressed ? bit6 : 0);
-    }
-    else if (event.data.type === 'SET_SPEED') {
-        speed = Number(event.data.value)/100;
-        console.log('set speed', speed);
-    }
-    else if (event.data.type === 'NMI') {
-        cpu.interrupt(true, 0);
-    }
-    else if (event.data.type === 'UPDATE_MEMORY') {
-        updateMemory(event.data.value);
-        cpu.reset();
-    }
-    else if (event.data.type === 'READ_MEMORY') {
-        readMemory(event.data.from, event.data.size);
-    }
-    else if (event.data.type === 'HIDDEN') {
-        let hidden = event.data.value;
-        if (hidden) {
-            running = false;
-        }
-        else if (active) {
-            running = true;
-            run();
-        }
-        else {
-            console.log('not active');
-        }
-    }
+  },
+  io_read: (port: number) => {
+    return inPorts[port & 0xff];
+  },
+  io_write: ioWrite,
 };
 
-function* runGen () {
-    while (true){
-        for (let i = 0; i < 1000; i++) {
-            try {
-                const count = cpu.run_instruction();
-                cycles += count;
-            }
-            catch(e) {
-                const pc = cpu.getPC();
-                const mem = memory[cpu.getPC()] || 0;
-                    console.log(`Illegal operation at ${
-                    pc.toString(16)}: ${mem.toString(16)
-                }`);
-                cpu.reset();
-            }
-        }
-        yield cycles;
+function* runGen() {
+  while (true) {
+    for (let i = 0; i < 1000; i++) {
+      try {
+        const count = execute(cpu, cb);
+        cycles += count;
+      } catch (e) {
+        const pc = cpu.pc;
+        const mem = memory[pc] || 0;
+        console.error(
+          `Illegal operation at ${pc.toString(16)}: ${mem.toString(16)}`
+        );
+        reset(cpu);
+      }
     }
+    yield cycles;
+  }
 }
 
 let pending = false;
 const iter = runGen();
 function run() {
-    if (pending) return;
-    if (!running) return;
-    iter.next();
+  if (pending) return;
+  if (!running) return;
+  iter.next();
+  if (running) {
+    pending = true;
     const delay = Math.floor((1 - Number(speed)) * 30);
-    if (running) {
-        pending = true;
-        setTimeout(function(){
-            pending = false;
-            run();
-        }, delay)
-    };
+    setTimeout(function () {
+      pending = false;
+      run();
+    }, delay);
+  }
 }
 
-function updateDisplay() {
-    const digits = outPorts[1];
-    const segments = outPorts[2];
-    let mask = 0x01;
-    for (let i = 0; i < 6; i++) {
-        if (digits & mask){
-            display[i] = segments;
-        }
-        mask = mask << 1;
+const resetRun = (doReset: boolean) => {
+  if (doReset) {
+    reset(cpu);
+  }
+  running = true;
+  run();
+};
+
+const doInit = () => {
+  console.log('init');
+};
+
+const doReset = () => {
+  resetRun(true);
+};
+
+const doSetInputValue = (event: any) => {
+  const { port, value } = event.data;
+  inPorts[port] = value;
+};
+
+const doSetKeyValue = (event: any) => {
+  const { code, pressed } = event.data;
+  inPorts[0] = code;
+  const bit6 = 0b01000000;
+  const bit6mask = ~bit6;
+  inPorts[3] = (inPorts[3] & bit6mask) | (!pressed ? bit6 : 0);
+};
+
+const doSetSpeed = (event: any) => {
+  speed = Number(event.data.value) / 100;
+};
+
+const doSetSmooth = (event: any) => {
+  smooth = event.data.value === true;
+};
+
+const doNMI = () => {
+  interrupt(cpu, cb, true, 0);
+};
+
+const doUpdateMemory = (event: any) => {
+  console.log('memory updated');
+  const rom = event.data.value;
+  const blocks = MemoryMap.fromHex(rom);
+  for (const address of blocks.keys()) {
+    const block = blocks.get(address);
+    for (let i = 0; i < block.length; i++) {
+      memory[i + address] = block[i];
     }
-}
+  }
+  resetRun(true);
+};
 
-function getPortsBuffer(){
-    var buffer = new ArrayBuffer(4);
-    var view = new Uint8Array(buffer);
-    view[0] = outPorts[0];
-    view[1] = outPorts[1];
-    view[2] = outPorts[2];
-    return buffer;
-}
+const doReadMemory = (event: any) => {
+  console.log('read memory');
+  const from = event.data.from;
+  const size = event.data.size;
+  const buffer1 = new ArrayBuffer(size);
+  const bytes = new Uint8Array(buffer1);
+  for (let i = 0; i < size; i++) {
+    bytes[i] = memory[i + from];
+  }
+  (self as any).postMessage(
+    {
+      type: 'POST_MEMORY',
+      from,
+      size,
+      buffer: buffer1,
+    },
+    [buffer1]
+  );
+};
 
-function getDisplayBuffer(){
-    var buffer = new ArrayBuffer(6);
-    var view = new Uint8Array(buffer);
-    for (let i = 0; i < 6; i++) {
-        view[i] = display[i];
-    }
-    return buffer;
-}
+const doProcessHidden = (event: any) => {
+  const hidden = event.data.value;
+  if (hidden) {
+    running = false;
+  } else if (active) {
+    resetRun(false);
+  } else {
+    console.log('not active');
+  }
+};
 
-let speaker = 1;
-let wavelength = 0;
-function postOutPorts(port:number, value:number) {
-    const buffer = getPortsBuffer();
-    const display = getDisplayBuffer();
-
-    if (port === 1) {
-        const speaker1 = value >> 7;
-        if (speaker1 === 1 && speaker === 0) {
-            wavelength = cycles;
-            cycles = 0;
-        }
-        speaker = speaker1;
-    }
-    if (cycles > 10000) wavelength = 0;
-
-    self.postMessage({
-        type: 'POST_OUTPORTS',
-        buffer,
-        display,
-        speaker,
-        wavelength,
-        pc: cpu.getPC(),
-    // @ts-ignore: Type 'ArrayBuffer' is not assignable to type 'string' bug in type definition
-    }, [buffer, display]);
-}
-
-function updateMemory(rom:string) {
-    const blocks = MemoryMap.fromHex(rom);
-    for (let address of blocks.keys()) {
-        const block = blocks.get(address);
-        for (let i = 0; i < block.length; i++) {
-            memory[i + address] = block[i];
-        }
-    }
-}
-
-function readMemory(from:number, size:number) {
-    let buffer = new ArrayBuffer(size);
-    let bytes = new Uint8Array(buffer);
-    for (let i = 0; i < size; i++) {
-        bytes[i] = memory[i + from]
-    }
-    self.postMessage({
-        type: 'POST_MEMORY',
-        from,
-        size,
-        buffer,
-    // @ts-ignore: Type 'ArrayBuffer' is not assignable to type 'string' bug in type definition
-    }, [buffer]);
-}
+self.onmessage = (event: any) => {
+  if (event.data.type === 'INIT') {
+    doInit();
+  } else if (event.data.type === 'RESET') {
+    doReset();
+  } else if (event.data.type === 'SET_INPUT_VALUE') {
+    doSetInputValue(event);
+  } else if (event.data.type === 'SET_KEY_VALUE') {
+    doSetKeyValue(event);
+  } else if (event.data.type === 'SET_SMOOTH') {
+    doSetSmooth(event);
+  } else if (event.data.type === 'SET_SPEED') {
+    doSetSpeed(event);
+  } else if (event.data.type === 'NMI') {
+    doNMI();
+  } else if (event.data.type === 'UPDATE_MEMORY') {
+    doUpdateMemory(event);
+  } else if (event.data.type === 'READ_MEMORY') {
+    doReadMemory(event);
+  } else if (event.data.type === 'HIDDEN') {
+    doProcessHidden(event);
+  }
+};

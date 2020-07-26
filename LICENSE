@@ -19,3 +19,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+The Z80 cpu emulation (z80.ts) is derived from the work of Matthew Howell:
+
+## Emulator for the Zilog Z80 microprocessor
+
+This module is a simple, straightforward instruction interpreter.
+There is no fancy dynamic recompilation or cycle-accurate emulation.
+The author believes that this should be sufficient for any emulator that
+would be feasible to write in JavaScript anyway.
+
+The code and the comments in this file assume that the reader is familiar
+with the Z80 architecture. If you're not, here are some references I use:
+http://clrhome.org/table/ - Z80 instruction set tables
+http://www.zilog.com/docs/z80/um0080.pdf - The official manual
+http://www.myquest.nl/z80undocumented/z80-documented-v0.91.pdf
+- The Undocumented Z80, Documented
+
+(c) 2013 Matthew Howell
+This code is released under the MIT license,
