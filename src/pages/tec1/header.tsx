@@ -11,11 +11,10 @@ const roms = {
   'MON-1A': () => import('../../roms/MON-1A'),
   'MON-1B': () => import('../../roms/MON-1B'),
   'MON-2': () => import('../../roms/MON-2'),
-  'JMON': () => import('../../roms/JMON'),
+  JMON: () => import('../../roms/JMON'),
 };
 
 const BaseHeader = ({ worker, className }: HeaderProps) => {
-
   const [rom, setRom] = React.useState('');
 
   const handleUpload = (event: any) => {
@@ -38,7 +37,7 @@ const BaseHeader = ({ worker, className }: HeaderProps) => {
       setRom(name);
       const func = roms[name];
       const result = await func();
-      worker.postMessage({ type: 'UPDATE_MEMORY', value: result.ROM })
+      worker.postMessage({ type: 'UPDATE_MEMORY', value: result.ROM });
     }
   };
 
@@ -53,27 +52,30 @@ const BaseHeader = ({ worker, className }: HeaderProps) => {
   };
 
   return (
-    <div className={`${className} tec1-header`}>
-      <div>
-        <label htmlFor="file-upload">HEX</label>
-        <input
-          id="file-upload"
-          type="file"
-          accept=".hex"
-          onChange={handleUpload}
-        />
+    <>
+      <h3>Wicked TEC-1 Emulator</h3>
+      <div className={`${className} tec1-header`}>
+        <div>
+          <label htmlFor="file-upload">HEX</label>
+          <input
+            id="file-upload"
+            type="file"
+            accept=".hex"
+            onChange={handleUpload}
+          />
+        </div>
+        <div>
+          <label htmlFor="rom-select">ROM</label>
+          <select id="rom-select" value={rom} onChange={handleChangeROM}>
+            <option value="">Select</option>
+            {Object.keys(roms).map((key) => (
+              <option key={key}>{key}</option>
+            ))}
+          </select>
+        </div>
+        <button onClick={handleDownload}>Download</button>
       </div>
-      <div>
-        <label htmlFor="rom-select">ROM</label>
-        <select id="rom-select" value={rom} onChange={handleChangeROM}>
-          <option value="">Select</option>
-          {Object.keys(roms).map(key =>
-            <option key={key}>{key}</option>)
-          }
-        </select>
-      </div>
-      <button onClick={handleDownload}>Download</button>
-    </div>
+    </>
   );
 };
 export const Header = styled(BaseHeader)`
