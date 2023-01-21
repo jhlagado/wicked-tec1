@@ -53,7 +53,7 @@ const BaseHeader = ({ worker, className }: HeaderProps) => {
 
   return (
     <>
-      <h3>Wicked TEC-1 Emulator</h3>
+      <h3>TEC-1 Emulator</h3>
       <div className={`${className} tec1-header`}>
         <div>
           <label htmlFor="file-upload">HEX</label>
