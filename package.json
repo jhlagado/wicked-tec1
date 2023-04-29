@@ -58,7 +58,7 @@
     "node-fetch": "^2.6.0",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-html-externals": "^0.1.2",
-    "stubby": "^4.1.1",
+    "stubby": "^5.1.0",
     "ts-jest": "^24.3.0",
     "typescript": "3.8.3"
   },
